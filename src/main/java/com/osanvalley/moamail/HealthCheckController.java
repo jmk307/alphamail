@@ -1,6 +1,6 @@
 package com.osanvalley.moamail;
 
-import com.team6.sole.global.config.CommonApiResponse;
+import com.osanvalley.moamail.global.config.CommonApiResponse;
 import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
