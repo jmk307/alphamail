@@ -1,14 +1,24 @@
+buildscript {
+	ext {
+		queryDslVersion = "5.0.0"
+	}
+}
+
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.2.3'
-	id 'io.spring.dependency-management' version '1.1.4'
+	id 'org.springframework.boot' version '2.7.8'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10'
 }
 
 group = 'com.osanvalley'
 version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
 
-java {
-	sourceCompatibility = '17'
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
 }
 
 repositories {
@@ -16,10 +26,88 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	testImplementation 'junit:junit:4.13.1'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// 스웨거, spring security
+	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+	implementation group: 'io.springfox', name: 'springfox-swagger-ui', version: '3.0.0'
+	// implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.2'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+	// json
+	implementation group: 'org.json', name: 'json', version: '20220320'
+
+	// redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	//stringUtils
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+	// oauth2.0
+	implementation group: 'org.springframework.security', name: 'spring-security-oauth2-client', version: '5.6.3'
+
+	//AWS S3
+	// implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.2'
+
+	// jwt library
+	implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '3.10'
+
+	//Firebase FCM
+	// implementation group: 'com.google.firebase', name: 'firebase-admin', version: '6.8.1'
+
+	// cache
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+	// bouncy castle
+	implementation group: 'org.bouncycastle', name: 'bcpkix-jdk14', version: '1.55'
+
+	// slack logback
+	// implementation 'com.github.maricn:logback-slack-appender:1.4.0'
+
+	// querydsl
+	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+	implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
 }
+
+jar {
+	enabled = false
+}
+
+//querydsl 추가 시작
+def querydslDir = "$buildDir/generated/querydsl"
+
+querydsl {
+	jpa = true
+	querydslSourcesDir = querydslDir
+}
+sourceSets {
+	main.java.srcDir querydslDir
+}
+compileQuerydsl{
+	options.annotationProcessorPath = configurations.querydsl
+}
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+	querydsl.extendsFrom compileClasspath
+}
+//querydsl 추가 끝
