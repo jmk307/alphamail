@@ -14,7 +14,7 @@ spring:
       matching-strategy: ant_path_matcher
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://awseb-e-3cb3huig37-stack-awsebrdsdatabase-fychmbp1by2b.ctucsaye0n6u.ap-northeast-2.rds.amazonaws.com:3306/alphamail
+    url: jdbc:mysql://awseb-e-3cb3huig37-stack-awsebrdsdatabase-fychmbp1by2b.ctucsaye0n6u.ap-northeast-2.rds.amazonaws.com:3306/alphamail_dev
     username: admin
     password: rejin0421
   jpa:
