@@ -4,12 +4,14 @@ import com.osanvalley.moamail.domain.mail.entity.NaverMailMember;
 import org.springframework.stereotype.Repository;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 @Repository
 public class MemoryNaverMailRepository implements NaverMailRepository {
-    private static Map<String, NaverMailMember> store = new HashMap<>();
+    private static final Map<String, NaverMailMember> memberStore = new HashMap<>();
 
     /**
      * 정보 : 인-메모리 DB에 사용자 저장하기
@@ -17,9 +19,8 @@ public class MemoryNaverMailRepository implements NaverMailRepository {
      */
     @Override
     public void saveConnectInfo(NaverMailMember member) {
-        store.put(member.getMemberId(), member);
+        memberStore.put(member.getMemberId(), member);
     }
-
 
     /**
      * 정보 : 인-메모리 DB에서 사용자 불러오기
@@ -28,23 +29,19 @@ public class MemoryNaverMailRepository implements NaverMailRepository {
      */
     @Override
     public NaverMailMember findConnectInfoByMemberId(String memberId) {
-        NaverMailMember findMember = store.get(memberId);
+        NaverMailMember findMember = memberStore.get(memberId);
         return findMember;
     }
 
-    /**
-     * TODO : 컨텐츠를 DB에 저장하는 코드
-     */
     @Override
-    public void saveContents() {
-
+    public void saveContents(Message message) throws MessagingException, IOException {
+//        로컬 테스트용에서는 따로 저장하지 않고 콘솔에 출력
     }
 
-    /**
-     * TODO : DB에서 컨텐츠를 가져오는 코드
-     */
     @Override
     public Message[] findByMailMessages() {
+//        로컬 테스트용에서는 구현 대신 콘솔에 출력
         return new Message[0];
     }
+
 }

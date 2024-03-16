@@ -1,6 +1,6 @@
 package com.osanvalley.moamail.domain.mail.controller;
 
-import com.osanvalley.moamail.domain.mail.dto.NaverMailCountRequestDto;
+import com.osanvalley.moamail.domain.mail.dto.NaverMailSetContentsRequestDto;
 import com.osanvalley.moamail.domain.mail.dto.NaverMailMemberRequestDto;
 import com.osanvalley.moamail.domain.mail.dto.NaverMailMemberResponseDto;
 import com.osanvalley.moamail.domain.mail.entity.NaverMailMember;
@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.mail.MessagingException;
+import java.io.IOException;
 
 @RestController
 public class NaverMailController {
@@ -19,17 +22,17 @@ public class NaverMailController {
     }
 
     /**
-     * 정보 : 인-메모리 데이터베이스 내에 네이버 메일 사용자를 저장하는 Method
+     * 정보 : 인-메모리 데이터베이스 내에 네이버 메일 사용자를 저장
      * @param reqDto Naver Mail 서비스와 연결을 위해 전달받은 DTO
      */
     @PostMapping("mail/naver/set-connect-info")
     public void setNaverMailMemberInfo(NaverMailMemberRequestDto reqDto) {
-        NaverMailMember naverMailMember = new NaverMailMember(reqDto.getMemberId(), reqDto.getEmailAddress(), reqDto.getEmailAddress());
+        NaverMailMember naverMailMember = new NaverMailMember(reqDto.getMemberId(), reqDto.getEmailAddress(), reqDto.getPassword());
         naverMailService.join(naverMailMember);
     }
 
     /**
-     * 정보 : 인-메모리 데이터베이스 내에 저장된 네이버 메일 사용자 불러오는 Method
+     * 정보 : 인-메모리 데이터베이스 내에 저장된 네이버 메일 사용자 불러오기
      * @param memberId Alpha Mail 서비스의 meberId
      * @return resDto 사용자의 정보(이메일 주소, 계정 ID) 리턴
      */
@@ -42,10 +45,11 @@ public class NaverMailController {
         return resDto;
     }
 
-    @PostMapping("mail/naver/set-mail-count")
-    public void setNaverMailContents(NaverMailCountRequestDto reqDto) {
+    @PostMapping("mail/naver/print-mail-contents")
+    public void printNaverMailContents(NaverMailSetContentsRequestDto reqDto) throws MessagingException, IOException {
         int mailCount = reqDto.getMailCount();
-        naverMailService.setMailContent();
+        String memberId = reqDto.getMemberId();
+        naverMailService.printNaverMailContents(mailCount, memberId);
     }
 
     /**
