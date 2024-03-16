@@ -18,6 +18,14 @@ jobs:
         with:
           java-version: 11
           distribution: 'temurin'
+    
+      #Create dotenv file
+      - name: Make env properties
+        run: |
+          touch ./src/main/resources/application.yml
+          echo "$ENV_PROPERTIES_PROD" > ./src/main/resources/application.yml
+        env:
+          ENV_PROPERTIES_PROD: ${{ secrets.ENV_PROPERTIES_PROD }}
 
       - name: Gradle Caching
         uses: actions/cache@v3
