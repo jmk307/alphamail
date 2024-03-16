@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class ImapsMailDemoApp {
-    public static void main(String[] args) throws MessagingException, IOException {
         /**
-         * InteliJ의 VM Options을 별도로 설정해야 동작하는 데모 앱입니다.
+         * 정보 : InteliJ의 VM Options을 별도로 설정해야 동작하는 데모 앱입니다. <br/>
          * VM Options 값 : -Ddemoapp.mail.userEmail="네이버ID" -Ddemoapp.mail.password="패스워드"
          */
+    public static void main(String[] args) throws MessagingException, IOException {
         String userEmail = System.getProperty("demoapp.mail.userEmail");
         String password = System.getProperty("demoapp.mail.password");
 
@@ -19,13 +19,15 @@ public class ImapsMailDemoApp {
         imapsMailService.connect();
 
         Message[] msgArray = imapsMailService.getMessages(false);
-        Message msg = msgArray[0];
-        System.out.println("1개의 메일 데이터를 분리해서 출력합니다.");
-
-        System.out.println(String.format("컨텐츠타임: %s", msg.getContentType()));
-        System.out.println(String.format("발신자[0]: %s", msg.getFrom()[0]));
-        System.out.println(String.format("메일제목: %s", msg.getSubject()));
-        System.out.println(String.format("메일내용: %s", msg.getContent()));
+        int mailContentCount = 10;
+        for(int i = msgArray.length - 1; i >= msgArray.length - mailContentCount; i--) {
+            Message msg = msgArray[i];
+            System.out.println(String.format("컨텐츠타임: %s", msg.getContentType()));
+            System.out.println(String.format("발신자[0]: %s", msg.getFrom()[0]));
+            System.out.println(String.format("메일제목: %s", msg.getSubject()));
+            System.out.println(String.format("메일내용: %s", msg.getContent()));
+            System.out.println("==================================");
+        }
 
         System.out.println("네이버 메일 서비스와 연결을 종료합니다.");
         imapsMailService.disconnect();
@@ -49,7 +51,7 @@ class ImapsMailService {
     }
 
     /**
-     * 네이버 메일 서버 연결
+     * 정보 : 네이버 메일 서버 연결
      * @throws MessagingException
      */
 
@@ -71,7 +73,7 @@ class ImapsMailService {
     }
 
     /**
-     * 네이버 메일 서버 로그아웃
+     * 정보 : 네이버 메일 서버 로그아웃
      * @throws MessagingException
      */
     public void disconnect() throws MessagingException {
@@ -82,9 +84,9 @@ class ImapsMailService {
     }
 
     /**
-     * 이메일 리스트 가져오기
-     * @param onlyNotRead - false : 읽은 메시지까지 가져오기 / true : 안 읽은 메시지만 불러오기
-     * @return
+     * 정보 : 이메일 리스트 가져오기
+     * @param onlyNotRead false : 읽은 메시지까지 가져오기 / true : 안 읽은 메시지만 불러오기
+     * @return Message[] : 메일 컨텐츠 묶음
      * @throws MessagingException
      */
     public Message[] getMessages(boolean onlyNotRead) throws MessagingException {
