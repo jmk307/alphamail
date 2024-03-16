@@ -1,7 +1,7 @@
 package com.osanvalley.moamail.global.config.security;
 
-import com.osanvalley.moamail.domain.member.MemberRepository;
 import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,14 +23,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     @Transactional
-    public UserDetails loadUserByUsername(final String phoneNumber) {
-        return memberRepository.findByPhoneNumber(phoneNumber)
+    public UserDetails loadUserByUsername(final String authId) {
+        return memberRepository.findByAuthId(authId)
                 .map(this::createUser)
-                .orElseThrow(() -> new UsernameNotFoundException(phoneNumber + " -> 데이터베이스에서 찾을 수 없습니다."));
+                .orElseThrow(() -> new UsernameNotFoundException(authId + " -> 데이터베이스에서 찾을 수 없습니다."));
     }
 
     private User createUser(Member member) {
-        return new User(member.getPhoneNumber(), member.getPassword(), authorities());
+        return new User(member.getAuthId(), member.getPassword(), authorities());
     }
 
     private static Collection<? extends GrantedAuthority> authorities() {

@@ -38,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TokenProvider implements InitializingBean {
     private final Logger logger = LoggerFactory.getLogger(TokenProvider.class);
 
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String BEARER = "Bearer ";
+
     /** 토큰 유효 시간 (ms) */
     private static final long JWT_EXPIRATION_MS = 1000L * 60 * 60 * 24; // 1일
     private static final long REFRESH_TOKEN_EXPIRATION_MS = 1000L * 60 * 60 * 24 * 7; //7일
@@ -57,7 +60,7 @@ public class TokenProvider implements InitializingBean {
     }
 
     // accessToken
-    public String generateAccessToken(String email, String role) {
+    public String generateAccessToken(String authId) {
 
         //권한 가져오기
         final Date now = new Date();
@@ -65,8 +68,8 @@ public class TokenProvider implements InitializingBean {
 
         return Jwts.builder()
                 .setIssuedAt(now) // 생성일자 지정(현재)
-                .setSubject(email) // 사용자(principal => email)
-                .claim(AUTHORITIES_KEY, role) //권한 설정
+                .setSubject(authId) // 사용자(principal => phoneNumber)
+                .claim(AUTHORITIES_KEY, "ROLE_USER") //권한 설정
                 .setExpiration(accessTokenExpiresIn) // 만료일자
                 .signWith(key, SignatureAlgorithm.HS512) // signature에 들어갈 secret 값 세팅
                 .compact();
