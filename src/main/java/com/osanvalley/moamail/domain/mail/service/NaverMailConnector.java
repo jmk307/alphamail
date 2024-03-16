@@ -5,7 +5,7 @@ import com.osanvalley.moamail.domain.mail.entity.NaverMailMember;
 import javax.mail.*;
 import java.util.Properties;
 
-public class NaverMailConnection {
+public class NaverMailConnector {
     private Session session;
     private Store store;
     private Folder folder;
@@ -16,9 +16,11 @@ public class NaverMailConnection {
     private final int port = 993;
     private final String host = "imap.naver.com";
 
-    public NaverMailConnection(NaverMailMember member) {
+    public NaverMailConnector(NaverMailMember member) {
         this.emailAddress = member.getEmailAddress();
         this.password = member.getPassword();
+        System.out.println("member.getEmailAddress() = " + member.getEmailAddress());
+        System.out.println("member.getPassword() = " + member.getPassword());
     }
 
     /**
@@ -35,6 +37,7 @@ public class NaverMailConnection {
             } catch (SecurityException securityException) {
                 props = new Properties();
             }
+            props.setProperty("mail.imaps.ssl.protocols", "TLSv1.2");
             session = Session.getInstance(props);
         }
         store = session.getStore(url);

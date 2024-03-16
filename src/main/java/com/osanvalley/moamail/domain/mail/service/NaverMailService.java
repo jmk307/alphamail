@@ -4,7 +4,9 @@ import com.osanvalley.moamail.domain.mail.entity.NaverMailMember;
 import com.osanvalley.moamail.domain.mail.repository.NaverMailRepository;
 import org.springframework.stereotype.Service;
 
+import javax.mail.Message;
 import javax.mail.MessagingException;
+import java.io.IOException;
 
 @Service
 public class NaverMailService {
@@ -38,14 +40,30 @@ public class NaverMailService {
      * @param mailCount
      */
     public void getMailContents(int mailCount, String memberId) throws MessagingException {
-//        NaverMailMember member = naverMailRepository.findConnectInfoByMemberId(memberId);
-//        conn.connect();
     }
 
     /**
-     * TODO : Controller에서 메일을 전송할 수 있게 Form을 작성해 주는 메서드
+     * 정보 : Console에 메일 불러온 후 출력하기
+     * @param mailCount 불러올 메일의 개수
+     * @param memberId 메일을 불러오기 위한 계정 주인
+     * @throws MessagingException
+     * @throws IOException
      */
-    public void setMailContent() {
+    public void printNaverMailContents(int mailCount, String memberId) throws MessagingException, IOException {
+        NaverMailMember member = naverMailRepository.findConnectInfoByMemberId(memberId);
+        NaverMailConnector connector = new NaverMailConnector(member);
+        connector.connect();
+        Message[] messages = connector.getMessages();
 
+        for(int i = messages.length - 1; i >= messages.length - mailCount; i--) {
+            Message message = messages[i];
+            System.out.printf("컨텐츠타임: %s%n", message.getContentType());
+            System.out.printf("발신자[0]: %s%n", message.getFrom()[0]);
+            System.out.printf("메일제목: %s%n", message.getSubject());
+            System.out.printf("메일내용: %s%n", message.getContent());
+            System.out.println("==================================");
+        }
+
+        connector.disconnect();
     }
 }

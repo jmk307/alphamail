@@ -7,7 +7,10 @@ import javax.validation.constraints.NotNull;
 
 @Getter
 @AllArgsConstructor
-public class NaverMailCountRequestDto {
+public class NaverMailSetContentsRequestDto {
     @NotNull
     private int mailCount;
+
+    @NotNull
+    private String memberId;
 }
