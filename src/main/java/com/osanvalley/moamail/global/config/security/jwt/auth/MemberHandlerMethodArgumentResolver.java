@@ -1,6 +1,6 @@
 package com.osanvalley.moamail.global.config.security.jwt.auth;
 
-import com.osanvalley.moamail.domain.member.MemberRepository;
+import com.osanvalley.moamail.domain.member.repository.MemberRepository;
 import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.NotFoundException;
@@ -30,7 +30,7 @@ public class MemberHandlerMethodArgumentResolver implements HandlerMethodArgumen
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null) {
-            return memberRepository.findByPhoneNumber(authentication.getName())
+            return memberRepository.findByAuthId(authentication.getName())
                     .orElseThrow(() -> new NotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         }
 
