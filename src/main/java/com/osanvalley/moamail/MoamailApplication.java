@@ -19,5 +19,4 @@ public class MoamailApplication extends SpringBootServletInitializer {
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
 		return builder.sources(MoamailApplication.class);
 	}
-
 }

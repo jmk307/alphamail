@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# dotoenv
+/src/main/resources/application.yml
+
+>>>>>>> feature/member
