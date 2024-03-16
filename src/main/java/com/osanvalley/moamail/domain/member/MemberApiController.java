@@ -12,7 +12,6 @@ import com.osanvalley.moamail.domain.member.dto.LoginDto;
 import com.osanvalley.moamail.domain.member.dto.MemberRequestDto;
 import com.osanvalley.moamail.domain.member.dto.MemberResponseDto;
 import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
-import com.osanvalley.moamail.domain.member.service.MemberService;
 import com.osanvalley.moamail.global.config.CommonApiResponse;
 
 import io.swagger.annotations.Api;
@@ -42,7 +41,6 @@ public class MemberApiController {
         return ResponseEntity.ok(CommonApiResponse.of(memberService.validateAuthId(authId)));
     }
     
-
     @PostMapping("common/signin")
     @ApiOperation(value = "일반 로그인")
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signInCommon(

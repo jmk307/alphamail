@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.member.service;
+package com.osanvalley.moamail.domain.member;
 
 import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.*;
 
