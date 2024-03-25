@@ -121,14 +121,14 @@ public class MemberService {
 
     // 회원가입 소셜 판별
     public RegisterType validateRegisterType(String provider) {
-        return provider == "google"
+        return provider.equals("google")
                 ? RegisterType.GOOGLE
                 : RegisterType.NAVER;
     }
 
     // 등록 소셜 판별
     public Social validateSocialType(String provider) {
-        return provider == "google"
+        return provider.equals("google")
                 ? Social.GOOGLE
                 : Social.NAVER;
     }
