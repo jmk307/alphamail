@@ -1,13 +1,8 @@
 package com.osanvalley.moamail.domain.member.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
+import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.global.config.entity.BaseTimeEntity;
 
@@ -16,7 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.AccessLevel;
 import lombok.Builder;
 
-import javax.persistence.FetchType;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -37,13 +33,17 @@ public class SocialMember extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Member member;
 
+    @OneToMany(mappedBy = "socialMember", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Mail> mails = new ArrayList<>();
+
     @Builder
-    public SocialMember(Long id, String socialId, String email, String profileImgUrl, Social social, Member member) {
+    public SocialMember(Long id, String socialId, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
         this.id = id;
         this.socialId = socialId;
         this.email = email;
         this.profileImgUrl = profileImgUrl;
         this.social = social;
         this.member = member;
+        this.mails = mails;
     }
 }
