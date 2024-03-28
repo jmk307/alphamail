@@ -37,6 +37,6 @@ out/
 .vscode/
 
 # dotoenv
-/src/main/resources/application.yml
+
 
 >>>>>>> feature/member
