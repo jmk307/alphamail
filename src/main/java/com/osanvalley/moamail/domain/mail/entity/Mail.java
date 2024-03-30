@@ -36,8 +36,10 @@ public class Mail extends BaseTimeEntity {
 
     private String content;
 
+    private String historyId;
+
     @Builder
-    public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, List<String> toEmails, List<String> ccEmails, String content) {
+    public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, List<String> toEmails, List<String> ccEmails, String content, String historyId) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
@@ -46,5 +48,6 @@ public class Mail extends BaseTimeEntity {
         this.toEmails = toEmails;
         this.ccEmails = ccEmails;
         this.content = content;
+        this.historyId = historyId;
     }
 }
