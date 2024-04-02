@@ -10,7 +10,6 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -52,6 +51,7 @@ public class Mail extends BaseTimeEntity {
     @OneToMany(mappedBy = "mail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CCEmailReceiver> ccEmailReceivers;
 
+    @Column(length = 100000)
     private String content;
 
     private String historyId;
