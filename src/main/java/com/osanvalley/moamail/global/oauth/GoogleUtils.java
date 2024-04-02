@@ -97,9 +97,9 @@ public class GoogleUtils {
                     ccEmailReceivers.add(ccEmail);
                 }
             }
-            mailBatchRepository.saveAll(mails, toEmailReceivers, ccEmailReceivers);
-            System.out.println("메일 bulk insert 성공...!");
         }
+        mailBatchRepository.saveAll(mails, toEmailReceivers, ccEmailReceivers);
+        System.out.println("메일 bulk insert 성공...!");
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime) / 1000;
         System.out.println("시간차이(m) : "+secDiffTime);
