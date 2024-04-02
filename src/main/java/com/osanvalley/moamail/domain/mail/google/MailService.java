@@ -1,9 +1,10 @@
 package com.osanvalley.moamail.domain.mail.google;
 
-import com.osanvalley.moamail.domain.mail.MailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 
 @Service
 @RequiredArgsConstructor
