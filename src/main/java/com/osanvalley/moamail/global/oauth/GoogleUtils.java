@@ -13,7 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.osanvalley.moamail.domain.mail.entity.CCEmailReceiver;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.entity.ToEmailReceiver;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
@@ -94,9 +96,10 @@ public class GoogleUtils {
                 for (String ccEmail : filterCcAndToEmails(rawCcEmails)) {
                     ccEmailReceivers.add(ccEmail);
                 }
-                mailBatchRepository.saveAll(mails, toEmailReceivers, ccEmailReceivers);
             }
+            mailBatchRepository.saveAll(mails, toEmailReceivers, ccEmailReceivers);
         }
+        
         System.out.println("메일 bulk insert 성공...!");
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime) / 1000;
