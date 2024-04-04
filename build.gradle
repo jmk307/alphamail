@@ -13,7 +13,8 @@ plugins {
 
 group = 'com.osanvalley'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+sourceCompatibility = 11
+targetCompatibility = 11
 
 configurations {
 	compileOnly {
@@ -87,6 +88,16 @@ dependencies {
 	// querydsl
 	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
 	implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
+
+	// spring data jdbc
+	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+
+	// mysql-connector
+	implementation group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
+
+	// uuid generator
+	implementation "com.fasterxml.uuid:java-uuid-generator:4.0.1"
+	// implementation group: 'bytebuffer', name: 'bytebuffer', version: '0.2.0'
 }
 
 test {

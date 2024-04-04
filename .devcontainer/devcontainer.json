@@ -6,8 +6,17 @@
 	"image": "mcr.microsoft.com/devcontainers/java:1-11-bullseye",
 
 	"features": {
-		"ghcr.io/devcontainers/features/java:1": {},
-		"ghcr.io/devcontainers-contrib/features/ant-sdkman:2": {}
+		"ghcr.io/devcontainers/features/java:1": {
+			"installGradle": true,
+			"installMaven": true,
+			"installGroovy": true,
+			"version": "11",
+			"jdkDistro": "tem",
+			"gradleVersion": "7.5.1",
+			"mavenVersion": "latest",
+			"antVersion": "latest",
+			"groovyVersion": "latest"
+		}
 	}
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
