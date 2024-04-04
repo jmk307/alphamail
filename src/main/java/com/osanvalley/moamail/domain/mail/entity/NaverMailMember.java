@@ -6,10 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 @Entity
-@NoArgsConstructor
-@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class NaverMailMember {
-
     @Getter
     @Setter
     @NonNull
@@ -26,4 +24,18 @@ public class NaverMailMember {
     @NonNull
     private String password;
 
+    public NaverMailMember infoToEntity(String password) {
+        return NaverMailMember.builder()
+                .memberId(this.getMemberId())
+                .emailAddress(this.getEmailAddress())
+                .password(password)
+                .build();
+    }
+
+    @Builder
+    public NaverMailMember(String memberId, String emailAddress, String password) {
+        this.memberId = memberId;
+        this.emailAddress = emailAddress;
+        this.password = password;
+    }
 }
