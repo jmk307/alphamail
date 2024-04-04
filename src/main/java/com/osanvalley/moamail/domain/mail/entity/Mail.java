@@ -45,11 +45,11 @@ public class Mail extends BaseTimeEntity {
 
     private String fromEmail;
 
-    @OneToMany(mappedBy = "mail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ToEmailReceiver> toEmailReceivers;
+    @Column(length = 200)
+    private String toEmailReceivers;
 
-    @OneToMany(mappedBy = "mail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CCEmailReceiver> ccEmailReceivers;
+    @Column(length = 200)
+    private String ccEmailReceivers;
 
     @Column(length = 100000)
     private String content;
@@ -58,7 +58,7 @@ public class Mail extends BaseTimeEntity {
 
     @Builder
     public Mail(UUID id, SocialMember socialMember, Social social, String title, String fromEmail, 
-            List<ToEmailReceiver> toEmailReceivers, List<CCEmailReceiver> ccEmailReceivers, String content, String historyId) {
+            String toEmailReceivers, String ccEmailReceivers, String content, String historyId) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
