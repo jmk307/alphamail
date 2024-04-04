@@ -21,7 +21,6 @@ import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
-import com.osanvalley.moamail.global.config.redis.RedisService;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
@@ -37,7 +36,6 @@ public class GoogleUtils {
     private final MailRepository mailRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final MailBatchRepository mailBatchRepository;
-    private final RedisService redisService;
     private final WebClient webClient;
 
     @Transactional(readOnly = true)
@@ -57,10 +55,6 @@ public class GoogleUtils {
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         List<Mail> mails = new ArrayList<>();
-        List<String> toEmailReceivers = new ArrayList<String>();
-        List<String> ccEmailReceivers = new ArrayList<String>();
-        // List<ToEmailReceiver> toEmailReceivers = new ArrayList<>();
-        // List<CCEmailReceiver> ccEmailReceivers = new ArrayList<>();
 
         while (getGmailMessages(accessToken, nextPageToken).getNextPageToken() != null) {
             List<String> messageIds = getGmailMessages(accessToken, nextPageToken).messages.stream()
@@ -74,8 +68,12 @@ public class GoogleUtils {
                 
                 String title = filterPayLoadByKeyWord(payload, "Subject");
                 String fromEmail = filterPayLoadByKeyWord(payload, "From");
+
                 String rawToEmails = filterPayLoadByKeyWord(payload, "To");
                 String rawCcEmails = filterPayLoadByKeyWord(payload, "Cc");
+                String filterToEmails = filterCcAndToEmails(rawToEmails);
+                String filterCCEmails = filterCcAndToEmails(rawCcEmails);
+
                 String content = decodingBase64Url(filterContent(payload));
                 String historyId = gmail.getHistoryId();
 
@@ -84,20 +82,14 @@ public class GoogleUtils {
                     .social(Social.GOOGLE)
                     .title(title)
                     .fromEmail(fromEmail)
+                    .toEmailReceivers(filterToEmails)
+                    .ccEmailReceivers(filterCCEmails)
                     .content(content)
                     .historyId(historyId)
                     .build();
                 mails.add(mail);
-
-                for (String toEmail : filterCcAndToEmails(rawToEmails)) {
-                    toEmailReceivers.add(toEmail);
-                }
-
-                for (String ccEmail : filterCcAndToEmails(rawCcEmails)) {
-                    ccEmailReceivers.add(ccEmail);
-                }
             }
-            mailBatchRepository.saveAll(mails, toEmailReceivers, ccEmailReceivers);
+            mailBatchRepository.saveAll(mails);
         }
         
         System.out.println("메일 bulk insert 성공...!");
@@ -108,12 +100,12 @@ public class GoogleUtils {
         return "성공..!!";
     }
 
-    public List<String> filterCcAndToEmails(String rawEmails) {
+    public String filterCcAndToEmails(String rawEmails) {
         if (rawEmails == null) {
-            return Collections.emptyList();
+            return null;
         }
 
-        List<String> filterEmails = new ArrayList<>();
+        StringBuilder filterEmails = new StringBuilder();
         String patternEmail = "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b";
 
         Pattern e = Pattern.compile(patternEmail);
@@ -121,10 +113,10 @@ public class GoogleUtils {
 
         while (m.find()) {
             String email = m.group();
-            filterEmails.add(email);
+            filterEmails.append(email).append(" ");
         }
 
-        return filterEmails;
+        return filterEmails.toString().trim();
     }
 
     public String decodingBase64Url(String encodedBase64Url) {
