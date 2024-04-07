@@ -1,17 +1,16 @@
 package com.osanvalley.moamail.domain.mail.repository;
 
+import com.osanvalley.moamail.domain.mail.entity.Mail;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.osanvalley.moamail.domain.mail.entity.Mail;
-
-import lombok.RequiredArgsConstructor;
 import static com.osanvalley.moamail.global.util.Uuid.createUUID;
 
 @Repository

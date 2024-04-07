@@ -1,8 +1,7 @@
-package com.osanvalley.moamail.domain.mail.controller;
+package com.osanvalley.moamail.domain.mail.naver.controller;
 
-import com.osanvalley.moamail.domain.mail.dto.*;
-import com.osanvalley.moamail.domain.mail.service.NaverMailService;
-import com.osanvalley.moamail.domain.member.entity.SocialMember;
+import com.osanvalley.moamail.domain.mail.naver.dto.*;
+import com.osanvalley.moamail.domain.mail.naver.service.NaverMailService;
 import com.osanvalley.moamail.global.config.CommonApiResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,32 +25,32 @@ public class NaverMailApiController {
      */
     @PostMapping("connectInfo/set")
     @ApiOperation(value = "네이버 IMAPS 멤버 정보 셋팅")
-    public void setNaverMailMemberInfo(PostNaverImapConnectInfoRequestDto reqDto) {
-        naverMailService.setImapConnectInfo(
-                reqDto.getMemberId(),
-                reqDto.getPassword(),
-                reqDto.getEmailAddress()
-        );
+    public ResponseEntity<CommonApiResponse<PostNaverImapConnectInfoResponseDto>> setNaverMailMemberInfo(PostNaverImapConnectInfoRequestDto reqDto) {
+        PostNaverImapConnectInfoResponseDto infoDto = naverMailService.setImapConnectInfo(reqDto.getSocialId(), reqDto.getEmailAddress(), reqDto.getPassword());
+        return ResponseEntity.ok(CommonApiResponse.of(infoDto));
     }
 
     /**
      * 정보 : 인-메모리 데이터베이스 내에 저장된 네이버 메일 사용자 불러오기
-     * @param memberId Alpha Mail 서비스의 meberId
+     * @param socialId Alpha Mail 서비스의 소셜 아이디
      * @return resDto 사용자의 정보(이메일 주소, 계정 ID) 리턴
      */
     @GetMapping("connectInfo/get")
     @ApiOperation(value = "셋팅된 IMAPS 멤버 정보 조회")
     public ResponseEntity<CommonApiResponse<GetNaverImapConnectInfoResponseDto>> getNaverMailMemberInfo(
-            @RequestParam("memberId") String memberId
+            @RequestParam("socialId") String socialId
     ) {
-        GetNaverImapConnectInfoResponseDto mailConnectInfo = naverMailService.getMailConnectInfo(memberId);
-        return ResponseEntity.ok(CommonApiResponse.of(mailConnectInfo));
+        GetNaverImapConnectInfoResponseDto infoDto = naverMailService.getMailConnectInfo(socialId);
+        return ResponseEntity.ok(CommonApiResponse.of(infoDto));
     }
 
-    @PostMapping("content/import")
-    public void saveNaverMailContents(NaverMailContentImportRequestDto reqDto) throws MessagingException, IOException {
-        SocialMember member = reqDto.getSocialMember();
-        naverMailService.saveNaverMailContents(member);
+    @PostMapping("content/import/{socialId}")
+    @ApiOperation(value = "네이버 메일 DB에 불러오기")
+    public ResponseEntity<CommonApiResponse<PostNaverMailContentImportResponseDto>> importNaverMailContents(
+            @PathVariable String socialId
+    ) throws MessagingException, IOException {
+        PostNaverMailContentImportResponseDto resDto = naverMailService.saveMailContents(socialId);
+        return ResponseEntity.ok(CommonApiResponse.of(resDto));
     }
 
     /**

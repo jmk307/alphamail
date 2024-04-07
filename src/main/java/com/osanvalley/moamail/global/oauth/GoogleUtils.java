@@ -1,21 +1,6 @@
 package com.osanvalley.moamail.global.oauth;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.osanvalley.moamail.domain.mail.entity.CCEmailReceiver;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
-import com.osanvalley.moamail.domain.mail.entity.ToEmailReceiver;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
@@ -27,8 +12,18 @@ import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor

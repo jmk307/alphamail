@@ -1,16 +1,11 @@
 package com.osanvalley.moamail.domain.member.entity;
 
-import javax.persistence.*;
-
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.global.config.entity.BaseTimeEntity;
+import lombok.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AccessLevel;
-import lombok.Builder;
-
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +18,11 @@ public class SocialMember extends BaseTimeEntity {
 
     private String socialId;
 
+    @Setter
     private String email;
+
+    @Setter
+    private String imapPassword;
 
     private String profileImgUrl;
 
@@ -37,10 +36,11 @@ public class SocialMember extends BaseTimeEntity {
     private List<Mail> mails = new ArrayList<>();
 
     @Builder
-    public SocialMember(Long id, String socialId, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
+    public SocialMember(Long id, String socialId, String email, String imapPassword, String profileImgUrl, Social social, Member member, List<Mail> mails) {
         this.id = id;
         this.socialId = socialId;
         this.email = email;
+        this.imapPassword = imapPassword;
         this.profileImgUrl = profileImgUrl;
         this.social = social;
         this.member = member;
