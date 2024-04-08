@@ -3,6 +3,7 @@ package com.osanvalley.moamail.domain.member.entity;
 import java.util.*;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;

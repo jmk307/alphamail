@@ -16,13 +16,14 @@ public class SocialMember extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 32)
     private String socialId;
 
     @Setter
-    private String email;
+    private String imapPassword;
 
     @Setter
-    private String imapPassword;
+    private String email;
 
     private String profileImgUrl;
 
@@ -36,11 +37,11 @@ public class SocialMember extends BaseTimeEntity {
     private List<Mail> mails = new ArrayList<>();
 
     @Builder
-    public SocialMember(Long id, String socialId, String email, String imapPassword, String profileImgUrl, Social social, Member member, List<Mail> mails) {
+    public SocialMember(Long id, String socialId, String imapPassword, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
         this.id = id;
         this.socialId = socialId;
-        this.email = email;
         this.imapPassword = imapPassword;
+        this.email = email;
         this.profileImgUrl = profileImgUrl;
         this.social = social;
         this.member = member;
