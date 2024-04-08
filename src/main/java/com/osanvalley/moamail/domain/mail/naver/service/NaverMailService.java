@@ -1,9 +1,12 @@
 package com.osanvalley.moamail.domain.mail.naver.service;
 
+import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.naver.dto.GetNaverImapConnectInfoResponseDto;
 import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverImapConnectInfoResponseDto;
 import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverMailContentImportResponseDto;
-import com.osanvalley.moamail.domain.mail.repository.RdsNaverMailRepository;
+import com.osanvalley.moamail.domain.mail.naver.util.MessageToEntityConverter;
+import com.osanvalley.moamail.domain.mail.naver.util.NaverMailConnector;
+import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptService;
@@ -13,20 +16,20 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
 public class NaverMailService {
-    private final RdsNaverMailRepository naverMailRepository;
     /**
      * MVP 단계에서는 별도로 IMAP Member를 정규화 하지 않음.
      * 따라서, Member 도메인에 의존함.
      */
-//    private final RdsNaverMemberRepository naverMemberRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final TwoWayEncryptService twoWayEncryptService;
+    private final MailRepository mailRepository;
     /**
      * 정보 : Naver Mail 서비스 연동을 위해 사용자 정보 저장
      *
@@ -57,47 +60,33 @@ public class NaverMailService {
         return new GetNaverImapConnectInfoResponseDto(findSocialMember.getEmail());
     }
 
-//    public void saveNaverMailContents(SocialMember member) throws MessagingException, IOException {
-//        Optional<NaverMailMember> member = naverMemberRepository.findByMemberId(member.get().getMemberId());
-//        NaverMailConnector connector = new NaverMailConnector(member.get());
-//        connector.connect();
-//        Message[] messages = connector.getMessages();
-//
-////       중복 검증 로직 필요
-////       중복으로 저장되는 경우가 발생할 수 있음.
-//        for(int i = messages.length - 1; i >= messages.length - 10; i--) {
-//            Message message = messages[i];
-//
-//            Mail mail = Mail.builder()
-//                    .socialMember()
-//                    .social()
-//                    .title()
-//                    .fromEmail()
-//                    .toEmails()
-//                    .ccEmails()
-//                    .content()
-//                .build();
-//
-//            naverMailRepository.save(mail);
-//        }
-
     /**
      * 정보 : 네이버 메일과 IMAP 연동 후 Mail Content들을 DB에 저장하는 메서드
      * @param accessToken 사용자의 IMAP 정보를 받아오기 위해 필요한 액세스 토큰 정보 (인증 기능 개발 이후)
      * @param socialId 사용자의 IMAP 정보를 받아오기 위해 필요한 소셜 ID 정보 (인증 기능 개발 이전)
      */
-    public PostNaverMailContentImportResponseDto saveMailContents(String socialId) throws MessagingException {
+    public PostNaverMailContentImportResponseDto saveMailContents(String socialId) throws MessagingException, IOException {
         SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
-        NaverMailConnector conn = new NaverMailConnector(findSocialMember.getEmail(), findSocialMember.getImapPassword());
+        String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
+        NaverMailConnector conn = new NaverMailConnector(
+                findSocialMember.getEmail(),
+                decryptPassword
+        );
 
         conn.connect();
+        Message[] messages = conn.getMessages();
 
-        return new PostNaverMailContentImportResponseDto(1);
+        Message message = messages[0];
+        MessageToEntityConverter converter = new MessageToEntityConverter();
+        Mail messageEntity = converter.toMailEntity(message, findSocialMember);
+
+        mailRepository.save(messageEntity);
+        conn.disconnect();
+
+        return new PostNaverMailContentImportResponseDto(messages.length);
     }
-//
-//        connector.disconnect();
 
     /**
      * 정보 : Console에 메일 불러온 후 출력하기

@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.mail.naver.service;
+package com.osanvalley.moamail.domain.mail.util;
 
 import javax.mail.*;
 

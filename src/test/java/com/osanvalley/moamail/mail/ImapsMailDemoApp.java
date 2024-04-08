@@ -1,9 +1,15 @@
 package com.osanvalley.moamail.mail;
 
 import javax.mail.*;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.search.FlagTerm;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ImapsMailDemoApp {
         /**
@@ -19,18 +25,105 @@ public class ImapsMailDemoApp {
         imapsMailService.connect();
 
         Message[] msgArray = imapsMailService.getMessages(false);
-        int mailContentCount = 10;
+        int mailContentCount = 30;
         for(int i = msgArray.length - 1; i >= msgArray.length - mailContentCount; i--) {
+            //        제목, 발신자, 수신자(리스트), 참조자(리스트), 컨텐츠, 히스토리ID
             Message msg = msgArray[i];
-            System.out.println(String.format("컨텐츠타임: %s", msg.getContentType()));
-            System.out.println(String.format("발신자[0]: %s", msg.getFrom()[0]));
-            System.out.println(String.format("메일제목: %s", msg.getSubject()));
-            System.out.println(String.format("메일내용: %s", msg.getContent()));
+            System.out.printf("메일제목: %s%n", msg.getSubject());
+            System.out.print("발신자: ");
+            for(Address address : msg.getFrom()) {
+                System.out.print(convertToStringGetAddress(address) + " ");
+            }
+            System.out.println();
+
+            System.out.print("수신자: ");
+            Address[] TO = msg.getRecipients(Message.RecipientType.TO);
+            if(TO != null) {
+                for (Address address : TO) {
+                    System.out.print(convertToStringGetAddress(address) + " ");
+                }
+            }
+            System.out.println();
+
+            System.out.print("참조자: ");
+            Address[] CC = msg.getRecipients(Message.RecipientType.CC);
+            if(CC != null) {
+                for (Address address : CC) {
+                    System.out.print(convertToStringGetAddress(address) + " ");
+                }
+            }
+            System.out.println();
+
+            String contentType = msg.getContentType().split(";")[0];
+            if(contentType.equals("multipart/alternative")) {
+                System.out.printf("메일내용: %s%n", convertToHTML((MimeMultipart) msg.getContent()));
+                System.out.println("multipart -> html 전환 함수 호출!");
+            } else {
+                System.out.printf("메일내용: %s%n", msg.getContent());
+            }
+
             System.out.println("==================================");
         }
 
         System.out.println("네이버 메일 서비스와 연결을 종료합니다.");
         imapsMailService.disconnect();
+    }
+
+    public static String convertToHTML(MimeMultipart multipart) {
+        StringBuilder htmlContent = new StringBuilder();
+
+        try {
+            int count = multipart.getCount();
+            for (int i = 0; i < count; i++) {
+                BodyPart bodyPart = multipart.getBodyPart(i);
+                String contentType = bodyPart.getContentType();
+
+                if (contentType.toLowerCase().contains("text/html")) {
+                    htmlContent.append((String) bodyPart.getContent());
+                }
+            }
+        } catch (MessagingException | java.io.IOException e) {
+            e.printStackTrace();
+        }
+
+        return htmlContent.toString();
+    }
+
+    private static String convertToStringGetAddress(Address fromAddress) {
+        String[] splitData = fromAddress.toString().split("<");
+
+        try {
+            if (splitData.length >= 2) {
+                String base64EncodedData = splitData[0];
+                String senderEmailAddress = "<" + splitData[1];
+
+                String regex_UTF8 = "(?:\\?utf-8\\?B\\?|\\?UTF-8\\?B\\?)([^?]+)\\?\\s*";
+                Pattern pattern_UTF8 = Pattern.compile(regex_UTF8);
+                Matcher matcher_UTF8 = pattern_UTF8.matcher(base64EncodedData);
+
+                if (matcher_UTF8.find()) {
+                    String extractedString = matcher_UTF8.group(1);
+                    byte[] decodedBytes = Base64.getDecoder().decode(extractedString);
+                    return new String(decodedBytes, StandardCharsets.UTF_8) + " " + senderEmailAddress;
+                }
+
+                String regex_EUCKR = "(?:\\?euc-kr\\?B\\?|\\?EUC-KR\\?B\\?)([^?]+)\\?\\s*";
+                Pattern pattern_EUCKR = Pattern.compile(regex_EUCKR);
+                Matcher matcher_EUCKR = pattern_EUCKR.matcher(base64EncodedData);
+
+                if (matcher_EUCKR.find()) {
+                    String extractedString = matcher_EUCKR.group(1);
+                    byte[] decodedBytes = Base64.getDecoder().decode(extractedString);
+                    return new String(decodedBytes, Charset.forName("EUC-KR")) + " " + senderEmailAddress;
+                }
+
+                return senderEmailAddress;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return "<" + fromAddress + ">";
     }
 }
 
