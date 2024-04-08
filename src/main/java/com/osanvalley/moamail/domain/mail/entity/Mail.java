@@ -1,20 +1,16 @@
 package com.osanvalley.moamail.domain.mail.entity;
 
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
-import org.hibernate.annotations.GenericGenerator;
 
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.Social;
@@ -30,10 +26,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Mail extends BaseTimeEntity {
     @Id
-    @GeneratedValue(generator = "uuid2")
-    @GenericGenerator(name = "uuid2", strategy = "uuid2")
-    @Column(columnDefinition = "BINARY(16)")
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private SocialMember socialMember;
@@ -45,20 +39,25 @@ public class Mail extends BaseTimeEntity {
 
     private String fromEmail;
 
-    @Column(length = 200)
+    @Column(columnDefinition = "TEXT")
     private String toEmailReceivers;
 
-    @Column(length = 200)
+    @Column(columnDefinition = "TEXT")
     private String ccEmailReceivers;
 
-    @Column(length = 100000)
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String html;
 
     private String historyId;
 
+    private LocalDateTime sendDate;
+
     @Builder
-    public Mail(UUID id, SocialMember socialMember, Social social, String title, String fromEmail, 
-            String toEmailReceivers, String ccEmailReceivers, String content, String historyId) {
+    public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, 
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, String historyId, LocalDateTime sendDate) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
@@ -67,6 +66,8 @@ public class Mail extends BaseTimeEntity {
         this.toEmailReceivers = toEmailReceivers;
         this.ccEmailReceivers = ccEmailReceivers;
         this.content = content;
+        this.html = html;
         this.historyId = historyId;
+        this.sendDate = sendDate;
     }
 }

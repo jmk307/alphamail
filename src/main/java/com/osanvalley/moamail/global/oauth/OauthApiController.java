@@ -30,7 +30,7 @@ public class OauthApiController {
             @PathVariable String messageId) {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.showGmailMessage(accessToken, messageId)));
     }
-
+    
     @GetMapping("google/{accessToken}")
     @ApiOperation(value = "Gmail 메시지 리스트 가져오기")
     public ResponseEntity<CommonApiResponse<GmailListResponseDto>> showGmailMessages(
