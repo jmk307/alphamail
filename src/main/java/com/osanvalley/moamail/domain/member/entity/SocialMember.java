@@ -1,18 +1,28 @@
 package com.osanvalley.moamail.domain.member.entity;
 
-import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.global.config.entity.BaseTimeEntity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.AccessLevel;
 import lombok.Builder;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
@@ -21,7 +31,10 @@ public class SocialMember extends BaseTimeEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 32)
     private String socialId;
+
+    private String imapPassword;
 
     private String email;
 
@@ -37,9 +50,10 @@ public class SocialMember extends BaseTimeEntity {
     private List<Mail> mails = new ArrayList<>();
 
     @Builder
-    public SocialMember(Long id, String socialId, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
+    public SocialMember(Long id, String socialId, String imapPassword, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
         this.id = id;
         this.socialId = socialId;
+        this.imapPassword = imapPassword;
         this.email = email;
         this.profileImgUrl = profileImgUrl;
         this.social = social;
