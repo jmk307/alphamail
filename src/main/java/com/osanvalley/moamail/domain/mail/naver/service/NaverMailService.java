@@ -69,6 +69,7 @@ public class NaverMailService {
         SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
+        int mailCount = 0;
         String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
         NaverMailConnector conn = new NaverMailConnector(
                 findSocialMember.getEmail(),
@@ -78,38 +79,17 @@ public class NaverMailService {
         conn.connect();
         Message[] messages = conn.getMessages();
 
-        Message message = messages[0];
-        MessageToEntityConverter converter = new MessageToEntityConverter();
-        Mail messageEntity = converter.toMailEntity(message, findSocialMember);
+        for(Message message : messages) {
+            MessageToEntityConverter converter = new MessageToEntityConverter();
+            Mail messageEntity = converter.toMailEntity(message, findSocialMember);
+            mailRepository.save(messageEntity);
+            mailCount++;
+            if(mailCount == 10) {
+                break;
+            }
+        }
 
-        mailRepository.save(messageEntity);
         conn.disconnect();
-
-        return new PostNaverMailContentImportResponseDto(messages.length);
+        return new PostNaverMailContentImportResponseDto(mailCount);
     }
-
-    /**
-     * 정보 : Console에 메일 불러온 후 출력하기
-     * @param mailCount 불러올 메일의 개수
-     * @param memberId 메일을 불러오기 위한 계정 주인
-     * @throws MessagingException
-     * @throws IOException
-     */
-//    public void printNaverMailContents(int mailCount, String memberId) throws MessagingException, IOException {
-//        NaverMailMember member = naverMailRepository.findConnectInfoByMemberId(memberId);
-//        NaverMailConnector connector = new NaverMailConnector(member);
-//        connector.connect();
-//        Message[] messages = connector.getMessages();
-//
-//        for(int i = messages.length - 1; i >= messages.length - mailCount; i--) {
-//            Message message = messages[i];
-//            System.out.printf("컨텐츠타임: %s%n", message.getContentType());
-//            System.out.printf("발신자[0]: %s%n", message.getFrom()[0]);
-//            System.out.printf("메일제목: %s%n", message.getSubject());
-//            System.out.printf("메일내용: %s%n", message.getContent());
-//            System.out.println("==================================");
-//        }
-//
-//        connector.disconnect();
-//    }
 }

@@ -12,7 +12,10 @@ import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,8 +48,8 @@ public class MessageToEntityConverter {
                 ? convertToHTML((MimeMultipart) message.getContent())
                 : message.getContent().toString();
 
-//            public Mail(UUID id, SocialMember socialMember, Social social, String title, String fromEmail,
-//                String toEmailReceivers, String ccEmailReceivers, String content, String historyId) {
+        Date receivedDate = message.getReceivedDate();
+        LocalDateTime receivedLocalDateTime = receivedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
         return Mail.builder()
                 .socialMember(socialMember)
@@ -55,8 +58,8 @@ public class MessageToEntityConverter {
                 .fromEmail(from)
                 .toEmailReceivers(to.toString())
                 .ccEmailReceivers(cc.toString())
-                .content(contentHtml)
-                .historyId("")
+                .html(contentHtml)
+                .sendDate(receivedLocalDateTime)
             .build();
     };
 
