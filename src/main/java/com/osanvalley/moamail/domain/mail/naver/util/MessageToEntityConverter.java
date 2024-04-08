@@ -4,10 +4,7 @@ import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.Social;
 
-import javax.mail.Address;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
+import javax.mail.*;
 import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -21,6 +18,12 @@ import java.util.regex.Pattern;
 
 public class MessageToEntityConverter {
     //        제목, 발신자, 수신자(리스트), 참조자(리스트), 컨텐츠, 히스토리ID
+    private final Folder folder;
+
+    public MessageToEntityConverter(Folder folder) {
+        this.folder = folder;
+    }
+
     public Mail toMailEntity(Message message, SocialMember socialMember) throws MessagingException, IOException {
         String title = message.getSubject();
 
@@ -51,6 +54,9 @@ public class MessageToEntityConverter {
         Date receivedDate = message.getReceivedDate();
         LocalDateTime receivedLocalDateTime = receivedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
+        long messageUID = ((UIDFolder) folder).getUID(message);
+        socialMember.setLastStoredMsgUID(messageUID);
+
         return Mail.builder()
                 .socialMember(socialMember)
                 .social(Social.NAVER)
@@ -59,6 +65,7 @@ public class MessageToEntityConverter {
                 .toEmailReceivers(to.toString())
                 .ccEmailReceivers(cc.toString())
                 .html(contentHtml)
+                .historyId(String.valueOf(messageUID))
                 .sendDate(receivedLocalDateTime)
             .build();
     };

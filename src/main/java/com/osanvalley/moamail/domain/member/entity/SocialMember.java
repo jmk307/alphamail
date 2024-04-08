@@ -36,8 +36,11 @@ public class SocialMember extends BaseTimeEntity {
     @OneToMany(mappedBy = "socialMember", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Mail> mails = new ArrayList<>();
 
+    @Setter
+    private long lastStoredMsgUID;
+
     @Builder
-    public SocialMember(Long id, String socialId, String imapPassword, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
+    public SocialMember(Long id, String socialId, String imapPassword, String email, String profileImgUrl, Social social, Member member, List<Mail> mails, long lastStoredMsgUID) {
         this.id = id;
         this.socialId = socialId;
         this.imapPassword = imapPassword;
@@ -46,5 +49,6 @@ public class SocialMember extends BaseTimeEntity {
         this.social = social;
         this.member = member;
         this.mails = mails;
+        this.lastStoredMsgUID = lastStoredMsgUID;
     }
 }

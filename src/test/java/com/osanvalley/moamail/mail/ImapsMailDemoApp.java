@@ -22,10 +22,10 @@ public class ImapsMailDemoApp {
 
         ImapsMailService imapsMailService = new ImapsMailService(userEmail, password);
         System.out.println("네이버 메일 서비스와 연결을 수립합니다.");
-        imapsMailService.connect();
+        Folder inbox = imapsMailService.connect();
 
         Message[] msgArray = imapsMailService.getMessages(false);
-        int mailContentCount = 30;
+        int mailContentCount = 5;
         for(int i = msgArray.length - 1; i >= msgArray.length - mailContentCount; i--) {
             //        제목, 발신자, 수신자(리스트), 참조자(리스트), 컨텐츠, 히스토리ID
             Message msg = msgArray[i];
@@ -61,6 +61,9 @@ public class ImapsMailDemoApp {
             } else {
                 System.out.printf("메일내용: %s%n", msg.getContent());
             }
+            
+            long messageUID = ((UIDFolder) inbox).getUID(msg);
+            System.out.println("messageUID = " + messageUID);
 
             System.out.println("==================================");
         }
@@ -130,6 +133,7 @@ public class ImapsMailDemoApp {
 class ImapsMailService {
     private Session session;
     private Store store;
+
     private Folder folder;
     private String protocol = "imaps";
     private String file = "INBOX";
@@ -148,7 +152,7 @@ class ImapsMailService {
      * @throws MessagingException
      */
 
-    public void connect() throws MessagingException {
+    public Folder connect() throws MessagingException {
         URLName url = new URLName(protocol, host, port, file, username, password);
         if(session == null) {
             Properties props = null;
@@ -162,7 +166,10 @@ class ImapsMailService {
         store = session.getStore(url);
         store.connect();
         folder = store.getFolder("inbox");
+
         folder.open(Folder.READ_ONLY);
+        
+        return folder;
     }
 
     /**
@@ -190,5 +197,6 @@ class ImapsMailService {
             return folder.getMessages();
         }
     }
+
 }
 

@@ -25,7 +25,7 @@ public class NaverMailConnector implements ImapMailConnector {
      * 정보 : 네이버 메일 서버 연결
      * @throws MessagingException
      */
-    public void connect() throws MessagingException {
+    public Folder connect() throws MessagingException {
         URLName url = new URLName(protocol, host, port, file, emailAddress, password);
         if(session == null) {
             Properties props = null;
@@ -41,6 +41,8 @@ public class NaverMailConnector implements ImapMailConnector {
         store.connect();
         folder = store.getFolder("inbox");
         folder.open(Folder.READ_ONLY);
+
+        return folder;
     }
 
     /**

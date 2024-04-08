@@ -16,8 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.UIDFolder;
 import java.io.IOException;
 
 @Service
@@ -76,20 +78,23 @@ public class NaverMailService {
                 decryptPassword
         );
 
-        conn.connect();
+        Folder inbox = conn.connect();
         Message[] messages = conn.getMessages();
+        MessageToEntityConverter converter = new MessageToEntityConverter(inbox);
 
         for(Message message : messages) {
-            MessageToEntityConverter converter = new MessageToEntityConverter();
-            Mail messageEntity = converter.toMailEntity(message, findSocialMember);
-            mailRepository.save(messageEntity);
-            mailCount++;
-            if(mailCount == 10) {
-                break;
+            long messageUID = ((UIDFolder) inbox).getUID(message);
+            if(messageUID > findSocialMember.getLastStoredMsgUID()) {
+                Mail messageEntity = converter.toMailEntity(message, findSocialMember);
+                mailRepository.save(messageEntity);
+                mailCount++;
+                if(mailCount == 10) {
+                    break;
+                }
             }
         }
-
         conn.disconnect();
+
         return new PostNaverMailContentImportResponseDto(mailCount);
     }
 }
