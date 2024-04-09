@@ -68,6 +68,10 @@ public class NaverMailApiController {
     /**
      * TODO : 메일 송신 기능 구현 필요
      */
-    public void sendMailContent() {
-    }
+//    @PostMapping("content/send/{socialId}")
+//    @ApiOperation(value = "네이버 메일 전송하기")
+//    public ResponseEntity<CommonApiResponse<PostNaverMailSendRequestDto>> sendNaverMailContent(PostNaverMailSendRequestDto reqDto) {
+//        PostNaverMailSendResponseDto resDto = naverMailService.sendNaverMailContent();
+//        return ResponseEntity.ok(CommonApiResponse.of(resDto));
+//    }
 }

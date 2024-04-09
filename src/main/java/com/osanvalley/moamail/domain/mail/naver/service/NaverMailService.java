@@ -6,7 +6,7 @@ import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverImapConnectInfoResp
 import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverMailContentImportResponseDto;
 import com.osanvalley.moamail.domain.mail.naver.util.MessageToEntityConverter;
 import com.osanvalley.moamail.domain.mail.naver.util.NaverMailConnector;
-import com.osanvalley.moamail.domain.mail.repository.MailRepository;
+import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptService;
@@ -21,6 +21,8 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.UIDFolder;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class NaverMailService {
      */
     private final SocialMemberRepository socialMemberRepository;
     private final TwoWayEncryptService twoWayEncryptService;
-    private final MailRepository mailRepository;
+    private final MailBatchRepository mailBatchRepository;
     /**
      * 정보 : Naver Mail 서비스 연동을 위해 사용자 정보 저장
      *
@@ -71,7 +73,6 @@ public class NaverMailService {
         SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
-        int mailCount = 0;
         String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
         NaverMailConnector conn = new NaverMailConnector(
                 findSocialMember.getEmail(),
@@ -80,21 +81,27 @@ public class NaverMailService {
 
         Folder inbox = conn.connect();
         Message[] messages = conn.getMessages();
+        int messageCount = inbox.getMessageCount();
+        int savedMessageCount = 0;
         MessageToEntityConverter converter = new MessageToEntityConverter(inbox);
+        List<Mail> mails = new ArrayList<>();
+        long lastStoredMsgUID = findSocialMember.getLastStoredMsgUID();
 
-        for(Message message : messages) {
-            long messageUID = ((UIDFolder) inbox).getUID(message);
-            if(messageUID > findSocialMember.getLastStoredMsgUID()) {
-                Mail messageEntity = converter.toMailEntity(message, findSocialMember);
-                mailRepository.save(messageEntity);
-                mailCount++;
-                if(mailCount == 10) {
-                    break;
-                }
+        for(int i = 0; i < messageCount; i++) {
+            long messageUID = ((UIDFolder) inbox).getUID(messages[i]);
+
+            if(messageUID > lastStoredMsgUID) {
+                Mail messageEntity = converter.toMailEntity(messages[i], findSocialMember);
+                mails.add(messageEntity);
+                savedMessageCount++;
+            } else {
+                break;
             }
         }
+
+        mailBatchRepository.saveAll(mails);
         conn.disconnect();
 
-        return new PostNaverMailContentImportResponseDto(mailCount);
+        return new PostNaverMailContentImportResponseDto(savedMessageCount);
     }
 }

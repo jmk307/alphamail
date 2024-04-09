@@ -9,10 +9,7 @@ import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Base64;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,10 +22,11 @@ public class MessageToEntityConverter {
     }
 
     public Mail toMailEntity(Message message, SocialMember socialMember) throws MessagingException, IOException {
+        
         String title = message.getSubject();
 
         Address getFromAddress = message.getFrom()[0];
-        String from = convertToStringGetAddress(getFromAddress);
+        String fromEmail = convertToStringGetAddress(getFromAddress);
 
         Address[] toAddresses = message.getRecipients(Message.RecipientType.TO);
         StringBuilder to = new StringBuilder();
@@ -51,9 +49,6 @@ public class MessageToEntityConverter {
                 ? convertToHTML((MimeMultipart) message.getContent())
                 : message.getContent().toString();
 
-        Date receivedDate = message.getReceivedDate();
-        LocalDateTime receivedLocalDateTime = receivedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-
         long messageUID = ((UIDFolder) folder).getUID(message);
         socialMember.setLastStoredMsgUID(messageUID);
 
@@ -61,12 +56,11 @@ public class MessageToEntityConverter {
                 .socialMember(socialMember)
                 .social(Social.NAVER)
                 .title(title)
-                .fromEmail(from)
+                .fromEmail(fromEmail)
                 .toEmailReceivers(to.toString())
                 .ccEmailReceivers(cc.toString())
                 .html(contentHtml)
                 .historyId(String.valueOf(messageUID))
-                .sendDate(receivedLocalDateTime)
             .build();
     };
 
