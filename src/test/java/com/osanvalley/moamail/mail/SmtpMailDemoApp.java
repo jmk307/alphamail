@@ -33,7 +33,7 @@ public class SmtpMailDemoApp {
 
         try {
             MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(user));
+            message.setFrom(new InternetAddress(user, "test"));
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(user));
 
             // 메일 제목

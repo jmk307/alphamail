@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.mail.MessagingException;
+import javax.validation.Valid;
 import java.io.IOException;
 
 @RestController
@@ -25,7 +26,9 @@ public class NaverMailApiController {
      */
     @PostMapping("connectInfo/set")
     @ApiOperation(value = "네이버 IMAPS 멤버 정보 셋팅")
-    public ResponseEntity<CommonApiResponse<PostNaverImapConnectInfoResponseDto>> setNaverMailMemberInfo(PostNaverImapConnectInfoRequestDto reqDto) {
+    public ResponseEntity<CommonApiResponse<PostNaverImapConnectInfoResponseDto>> setNaverMailMemberInfo(
+            @Valid @RequestBody PostNaverImapConnectInfoRequestDto reqDto)
+    {
         PostNaverImapConnectInfoResponseDto infoDto = naverMailService.setImapConnectInfo(reqDto.getSocialId(), reqDto.getEmailAddress(), reqDto.getPassword());
         return ResponseEntity.ok(CommonApiResponse.of(infoDto));
     }
@@ -54,6 +57,19 @@ public class NaverMailApiController {
     }
 
     /**
+     * TODO : 메일 송신 기능 구현 필요
+     */
+    @PostMapping("content/send/{socialId}")
+    @ApiOperation(value = "네이버 메일 전송하기")
+    public ResponseEntity<CommonApiResponse<PostNaverMailSendResponseDto>> sendNaverMailContent(
+            @PathVariable String socialId,
+            @Valid @RequestBody PostNaverMailSendRequestDto reqDto
+            ) throws MessagingException {
+        PostNaverMailSendResponseDto resDto = naverMailService.sendNaverMailContent(reqDto.getSocialId(), reqDto);
+        return ResponseEntity.ok(CommonApiResponse.of(resDto));
+    }
+
+    /**
      * TODO : 어떤 형태로 데이터를 던질지 아직 결정되지 않은 상태이므로, Console에 출력하는 방식으로 구현되어 있음. <br/>
      * 추후에, 반환 형태 변경 필요. <br/>
      * 네이버 메일은 구글 메일과 달리 메일 수신을 위해 별도의 계정 정보가 필요. <br/>
@@ -63,15 +79,5 @@ public class NaverMailApiController {
 //    public void receiveMailContents(String memberId) {
 //        Message[] msgArray = naverMailService.getMailContents(10, memberId);
 //        return msgArray;
-//    }
-
-    /**
-     * TODO : 메일 송신 기능 구현 필요
-     */
-//    @PostMapping("content/send/{socialId}")
-//    @ApiOperation(value = "네이버 메일 전송하기")
-//    public ResponseEntity<CommonApiResponse<PostNaverMailSendRequestDto>> sendNaverMailContent(PostNaverMailSendRequestDto reqDto) {
-//        PostNaverMailSendResponseDto resDto = naverMailService.sendNaverMailContent();
-//        return ResponseEntity.ok(CommonApiResponse.of(resDto));
 //    }
 }

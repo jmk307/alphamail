@@ -1,11 +1,10 @@
 package com.osanvalley.moamail.domain.mail.naver.service;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
-import com.osanvalley.moamail.domain.mail.naver.dto.GetNaverImapConnectInfoResponseDto;
-import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverImapConnectInfoResponseDto;
-import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverMailContentImportResponseDto;
+import com.osanvalley.moamail.domain.mail.naver.dto.*;
 import com.osanvalley.moamail.domain.mail.naver.util.MessageToEntityConverter;
-import com.osanvalley.moamail.domain.mail.naver.util.NaverMailConnector;
+import com.osanvalley.moamail.domain.mail.naver.util.NaverImapMailConnector;
+import com.osanvalley.moamail.domain.mail.naver.util.NaverSmtpMailConnector;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
@@ -16,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.mail.Folder;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.UIDFolder;
+import javax.mail.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +70,7 @@ public class NaverMailService {
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
-        NaverMailConnector conn = new NaverMailConnector(
+        NaverImapMailConnector conn = new NaverImapMailConnector(
                 findSocialMember.getEmail(),
                 decryptPassword
         );
@@ -103,5 +99,21 @@ public class NaverMailService {
         conn.disconnect();
 
         return new PostNaverMailContentImportResponseDto(savedMessageCount);
+    }
+
+    public PostNaverMailSendResponseDto sendNaverMailContent(String socialId, PostNaverMailSendRequestDto reqDto) throws MessagingException {
+        SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
+        NaverSmtpMailConnector conn = new NaverSmtpMailConnector(
+                findSocialMember.getEmail(),
+                decryptPassword
+        );
+
+        Session session = conn.connect();
+        conn.sendMessage(session, reqDto);
+
+        return new PostNaverMailSendResponseDto(reqDto.getTo());
     }
 }

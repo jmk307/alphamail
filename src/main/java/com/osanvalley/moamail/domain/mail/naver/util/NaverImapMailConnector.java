@@ -5,7 +5,7 @@ import com.osanvalley.moamail.domain.mail.util.ImapMailConnector;
 import javax.mail.*;
 import java.util.Properties;
 
-public class NaverMailConnector implements ImapMailConnector {
+public class NaverImapMailConnector implements ImapMailConnector {
     private Session session;
     private Store store;
     private Folder folder;
@@ -16,7 +16,7 @@ public class NaverMailConnector implements ImapMailConnector {
     private final int port = 993;
     private final String host = "imap.naver.com";
 
-    public NaverMailConnector(String emailAddress, String password) {
+    public NaverImapMailConnector(String emailAddress, String password) {
         this.emailAddress = emailAddress;
         this.password = password;
     }
