@@ -64,8 +64,8 @@ public class NaverMailApiController {
     public ResponseEntity<CommonApiResponse<PostNaverMailSendResponseDto>> sendNaverMailContent(
             @PathVariable String socialId,
             @Valid @RequestBody PostNaverMailSendRequestDto reqDto
-            ) throws MessagingException {
-        PostNaverMailSendResponseDto resDto = naverMailService.sendNaverMailContent(reqDto.getSocialId(), reqDto);
+        ) throws MessagingException {
+        PostNaverMailSendResponseDto resDto = naverMailService.sendNaverMailContent(socialId, reqDto);
         return ResponseEntity.ok(CommonApiResponse.of(resDto));
     }
 

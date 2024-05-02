@@ -6,6 +6,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 
 public interface SmtpMailConnector {
-    public Session connect();
+    public Session getSession();
     public void sendMessage(Session session, PostNaverMailSendRequestDto reqDto) throws MessagingException;
 }

@@ -111,7 +111,7 @@ public class NaverMailService {
                 decryptPassword
         );
 
-        Session session = conn.connect();
+        Session session = conn.getSession();
         conn.sendMessage(session, reqDto);
 
         return new PostNaverMailSendResponseDto(reqDto.getTo());

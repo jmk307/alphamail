@@ -11,10 +11,6 @@ import javax.validation.constraints.Size;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostNaverMailSendRequestDto {
-    @ApiModelProperty(value = "소셜 ID", example = "107330656787791997843")
-    @NotNull
-    private String socialId;
-
     @ApiModelProperty(value = "수신자", example = "wo8934@naver.com")
     @NotNull
     @Size(max = 30)

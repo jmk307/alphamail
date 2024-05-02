@@ -2,6 +2,8 @@ package com.osanvalley.moamail.domain.mail.naver.util;
 
 import com.osanvalley.moamail.domain.mail.naver.dto.PostNaverMailSendRequestDto;
 import com.osanvalley.moamail.domain.mail.util.SmtpMailConnector;
+import com.osanvalley.moamail.global.error.ErrorCode;
+import com.osanvalley.moamail.global.error.exception.BadRequestException;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -21,7 +23,7 @@ public class NaverSmtpMailConnector implements SmtpMailConnector {
     }
 
     @Override
-    public Session connect() {
+    public Session getSession() {
         Properties props = new Properties();
         props.put("mail.smtp.host", host);
         props.put("mail.smtp.port", port);
@@ -49,6 +51,8 @@ public class NaverSmtpMailConnector implements SmtpMailConnector {
             message.setText(reqDto.getContent());
 
             Transport.send(message);
+        } catch (AuthenticationFailedException e) {
+            throw new BadRequestException(ErrorCode.LOGIN_FAILED);
         } catch (MessagingException e) {
             e.printStackTrace();
         }
