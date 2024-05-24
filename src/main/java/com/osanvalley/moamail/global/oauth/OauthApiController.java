@@ -46,4 +46,12 @@ public class OauthApiController {
             @RequestParam(required = false) String nextPageToken) {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.saveGmails(accessToken, nextPageToken)));
     }
+
+    @GetMapping("google/{accessToken}/testRead")
+    @ApiOperation(value = "test")
+    public ResponseEntity<CommonApiResponse<String>> testFluxGmails(
+            @PathVariable String accessToken,
+            @RequestParam(required = false) String nextPageToken) {
+        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.testFluxGmails(accessToken, nextPageToken)));
+    }
 }
