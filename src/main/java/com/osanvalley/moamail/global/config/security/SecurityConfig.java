@@ -1,10 +1,7 @@
 package com.osanvalley.moamail.global.config.security;
 
-import com.osanvalley.moamail.global.config.security.jwt.JwtAccessDeniedHandler;
-import com.osanvalley.moamail.global.config.security.jwt.JwtAuthenticationEntryPoint;
-import com.osanvalley.moamail.global.config.security.jwt.JwtSecurityConfig;
-import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,12 +13,19 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.firewall.DefaultHttpFirewall;
+import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
+import com.osanvalley.moamail.global.config.security.jwt.JwtAccessDeniedHandler;
+import com.osanvalley.moamail.global.config.security.jwt.JwtAuthenticationEntryPoint;
+import com.osanvalley.moamail.global.config.security.jwt.JwtSecurityConfig;
+import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity

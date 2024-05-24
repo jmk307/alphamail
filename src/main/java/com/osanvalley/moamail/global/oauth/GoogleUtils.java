@@ -1,5 +1,8 @@
 package com.osanvalley.moamail.global.oauth;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -25,6 +28,7 @@ import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
+import com.osanvalley.moamail.global.util.Date;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -49,16 +53,14 @@ public class GoogleUtils {
         return getGmailMessages(accessToken, nextPageToken);
     }
 
-    @Transactional
-    public String saveGmails(String accessToken, String nextPageToken) {
+    @Transactional(readOnly = true)
+    public String testFluxGmails(String accessToken, String nextPageToken) {
         long beforeTime = System.currentTimeMillis();
-        SocialMember socialMember = socialMemberRepository.findBySocialId("107330656787791997842")
-                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
-
         String pageToken = nextPageToken;
         int count = 0;
         while (true) {
             System.out.println(pageToken);
+            
             GmailListResponseDto gmailList = getGmailMessages(accessToken, pageToken);
             if (gmailList == null) {
                 break;
@@ -67,30 +69,94 @@ public class GoogleUtils {
                 .map(Message::getId)
                 .collect(Collectors.toList());
             count += messageIds.size();
-            
+
             // 각 이메일 ID에 대한 병렬 요청 생성
-            Flux.fromIterable(messageIds)
+            Flux.fromIterable(messageIds.subList(0, 30))
                 .parallel() // 병렬 실행을 위해 Flux를 병렬 스트림으로 변환
                 .runOn(Schedulers.parallel()) // 병렬 스트림에서 실행을 병렬 스케줄러로 지정
                 .flatMap(messageId -> createIndividualRequest(accessToken, messageId)) // 각각의 요청을 병렬적으로 실행
                 .sequential() // 결과를 병렬 스트림에서 순차적으로 처리하도록 변환
                 .collectList() // 모든 Gmail을 리스트로 수집
-                .doOnNext(gmails -> batchSaveGmails(socialMember, gmails)) // 저장소에 모든 Gmail을 저장
                 .block(); // 모든 작업이 완료될 때까지 블록
-            
-            System.out.println("메일 bulk insert 성공...!");
-            System.out.println(count);
+
             pageToken = gmailList.getNextPageToken();
-            if (count == 2000) {
+            if (count == 2000 || pageToken == null) {
                 break;
             }
-        }
 
+            System.out.println(count);
+        }
+        
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime) / 1000;
         System.out.println("시간차이(m) : " + secDiffTime);
-        
+
         return "성공..!!";
+    }
+
+    @Transactional
+    public String saveGmails(String accessToken, String nextPageToken) {
+        SocialMember socialMember = socialMemberRepository.findBySocialId("107330656787791997842")
+                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        long beforeTime = System.currentTimeMillis();
+        String pageToken = nextPageToken;
+        int count = 0;
+        while (true) {
+            System.out.println(pageToken);
+            
+            GmailListResponseDto gmailList = getGmailMessages(accessToken, pageToken);
+            if (gmailList == null) {
+                break;
+            }
+
+            List<String> messageIds = gmailList.messages.stream()
+                .map(Message::getId)
+                .collect(Collectors.toList());
+            count += messageIds.size();
+
+            List<GmailResponseDto> gmails = new ArrayList<>();
+
+            if (messageIds.size() == 100) {
+                for (int i = 0; i < messageIds.size(); i += 20) {
+                    int start = i;
+                    int end = Math.min(i + 20, messageIds.size());
+
+                    List<String> subMessageIds = messageIds.subList(start, end);
+                    gmails.addAll(fluxReadGmails(subMessageIds, accessToken, socialMember));
+                }
+            } else {
+                // 각 이메일 ID에 대한 병렬 요청 생성
+                gmails.addAll(fluxReadGmails(messageIds, accessToken, socialMember));
+            }
+
+            batchSaveGmails(socialMember, gmails);
+
+            pageToken = gmailList.getNextPageToken();
+            if (count == 1000 || pageToken == null) {
+                break;
+            }
+
+            System.out.println("메일 bulk insert 성공...!");
+            System.out.println(count);
+        }
+        
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime) / 1000;
+        System.out.println("시간차이(m) : " + secDiffTime);
+
+        return "성공..!!";
+    }
+
+    public List<GmailResponseDto> fluxReadGmails(List<String> messageIds, String accessToken, SocialMember socialMember) {
+        return Flux.fromIterable(messageIds)
+                .parallel() // 병렬 실행을 위해 Flux를 병렬 스트림으로 변환
+                .runOn(Schedulers.parallel()) // 병렬 스트림에서 실행을 병렬 스케줄러로 지정
+                .flatMap(messageId -> createIndividualRequest(accessToken, messageId)) // 각각의 요청을 병렬적으로 실행
+                .sequential() // 결과를 병렬 스트림에서 순차적으로 처리하도록 변환
+                .collectList() // 모든 Gmail을 리스트로 수집
+                // .doOnNext(gmails -> batchSaveGmails(socialMember, gmails)) // 저장소에 모든 Gmail을 저장
+                .block(); // 모든 작업이 완료될 때까지 블록
     }
 
     public void batchSaveGmails(SocialMember socialMember, List<GmailResponseDto> gmails) {
@@ -109,7 +175,9 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
+
             String historyId = gmail.getHistoryId();
+            LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
 
             Mail mail = Mail.builder()
                 .socialMember(socialMember)
@@ -121,6 +189,7 @@ public class GoogleUtils {
                 .content(content)
                 .html(html)
                 .historyId(historyId)
+                .sendDate(sendDate)
                 .build();
             mails.add(mail);
         }
@@ -156,6 +225,16 @@ public class GoogleUtils {
 
             return decodedStr;
         }
+    }
+
+    public String filterSendDate(MessagePart payload) {
+        String rawSendDate = payload.getHeaders().stream()
+                .filter(p -> p.getName().equals("Date"))
+                .findFirst().get()
+                .getValue();
+        String trimSendDate = rawSendDate.replaceAll("\\s+", " ");
+
+        return trimSendDate;
     }
 
     public String filterContentAndHtml(MessagePart payload, String filterKeyword) {
