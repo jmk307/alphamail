@@ -1,12 +1,7 @@
 package com.osanvalley.moamail.global.oauth;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.osanvalley.moamail.global.config.CommonApiResponse;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
@@ -47,11 +42,9 @@ public class OauthApiController {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.saveGmails(accessToken, nextPageToken)));
     }
 
-    @GetMapping("google/{accessToken}/testRead")
-    @ApiOperation(value = "test")
-    public ResponseEntity<CommonApiResponse<String>> testFluxGmails(
-            @PathVariable String accessToken,
-            @RequestParam(required = false) String nextPageToken) {
-        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.testFluxGmails(accessToken, nextPageToken)));
+    @DeleteMapping("google")
+    @ApiOperation(value = "Gmail 삭제하기")
+    public ResponseEntity<CommonApiResponse<String>> deleteAllMails() {
+        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.deleteAllGmails()));
     }
 }
