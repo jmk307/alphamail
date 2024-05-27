@@ -75,7 +75,6 @@ public class Date {
                 .toFormatter()
                 .withZone(ZoneId.of("Asia/Seoul"));
 
-        LocalDateTime localDateTime = LocalDateTime.parse(dateString, formatter);
-        return localDateTime;
+        return LocalDateTime.parse(dateString, formatter);
     }
 }

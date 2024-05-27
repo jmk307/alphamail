@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,47 +52,6 @@ public class GoogleUtils {
     @Transactional(readOnly = true)
     public GmailListResponseDto showGmailMessages(String accessToken, String nextPageToken) {
         return getGmailMessages(accessToken, nextPageToken);
-    }
-
-    @Transactional(readOnly = true)
-    public String testFluxGmails(String accessToken, String nextPageToken) {
-        long beforeTime = System.currentTimeMillis();
-        String pageToken = nextPageToken;
-        int count = 0;
-        while (true) {
-            System.out.println(pageToken);
-            
-            GmailListResponseDto gmailList = getGmailMessages(accessToken, pageToken);
-            if (gmailList == null) {
-                break;
-            }
-            List<String> messageIds = gmailList.messages.stream()
-                .map(Message::getId)
-                .collect(Collectors.toList());
-            count += messageIds.size();
-
-            // 각 이메일 ID에 대한 병렬 요청 생성
-            Flux.fromIterable(messageIds.subList(0, 30))
-                .parallel() // 병렬 실행을 위해 Flux를 병렬 스트림으로 변환
-                .runOn(Schedulers.parallel()) // 병렬 스트림에서 실행을 병렬 스케줄러로 지정
-                .flatMap(messageId -> createIndividualRequest(accessToken, messageId)) // 각각의 요청을 병렬적으로 실행
-                .sequential() // 결과를 병렬 스트림에서 순차적으로 처리하도록 변환
-                .collectList() // 모든 Gmail을 리스트로 수집
-                .block(); // 모든 작업이 완료될 때까지 블록
-
-            pageToken = gmailList.getNextPageToken();
-            if (count == 2000 || pageToken == null) {
-                break;
-            }
-
-            System.out.println(count);
-        }
-        
-        long afterTime = System.currentTimeMillis();
-        long secDiffTime = (afterTime - beforeTime) / 1000;
-        System.out.println("시간차이(m) : " + secDiffTime);
-
-        return "성공..!!";
     }
 
     @Transactional
@@ -263,6 +223,11 @@ public class GoogleUtils {
                 .getValue();
     }
 
+    public String deleteAllGmails() {
+        mailRepository.deleteAll();
+        return "성공..!!";
+    }
+
     // Gmail 메시지 하나 가져오기
     public GmailResponseDto getGmailMessage(String accessToken, String messageId) {
         final String gmailUrl = "https://www.googleapis.com/gmail/v1/users/me/messages/{messageId}";
@@ -319,7 +284,7 @@ public class GoogleUtils {
                 .uri("https://www.googleapis.com/gmail/v1/users/me/messages/{messageId}", messageId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .onStatus(status -> status.is4xxClientError(), response -> response.bodyToMono(String.class).map(Exception::new))
+                .onStatus(HttpStatus::is4xxClientError, response -> response.bodyToMono(String.class).map(Exception::new))
                 .bodyToMono(GmailResponseDto.class); // GmailResponseDto를 반환하는 요청
         } catch (Exception e) {
             System.out.println(e.getMessage());
