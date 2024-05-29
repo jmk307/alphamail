@@ -2,6 +2,7 @@ package com.osanvalley.moamail.global.util;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 
@@ -72,9 +73,12 @@ public class Date {
                 .appendPattern("[d MMM yyyy H:m:ss Z]")
                 .appendPattern("[d MMM yyyy H:mm:s Z]")
                 .appendPattern("[d MMM yyyy H:m:s Z]")
-                .toFormatter()
-                .withZone(ZoneId.of("Asia/Seoul"));
+                .toFormatter();
 
-        return LocalDateTime.parse(dateString, formatter);
+        // 문자열을 ZonedDateTime 객체로 파싱
+        ZonedDateTime utcTime = ZonedDateTime.parse(dateString, formatter);
+
+        // 서울 시간대(KST)로 변환하고 LocalDateTime으로 변환
+        return utcTime.withZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime();
     }
 }
