@@ -10,6 +10,7 @@ import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
+import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequiredArgsConstructor
@@ -34,13 +35,13 @@ public class OauthApiController {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.showGmailMessages(accessToken, nextPageToken)));
     }
 
-    @PostMapping("google/{accessToken}")
+    /*@PostMapping("google/{accessToken}")
     @ApiOperation(value = "Gmail 저장하기")
     public ResponseEntity<CommonApiResponse<String>> saveGmailMessages(
             @PathVariable String accessToken,
             @RequestParam(required = false) String nextPageToken) {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.saveGmails(accessToken, nextPageToken)));
-    }
+    }*/
 
     @DeleteMapping("google")
     @ApiOperation(value = "Gmail 삭제하기")

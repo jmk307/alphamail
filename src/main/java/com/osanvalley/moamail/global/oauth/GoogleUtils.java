@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.osanvalley.moamail.domain.member.entity.Member;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -54,9 +55,8 @@ public class GoogleUtils {
         return getGmailMessages(accessToken, nextPageToken);
     }
 
-    @Transactional
-    public String saveGmails(String accessToken, String nextPageToken) {
-        SocialMember socialMember = socialMemberRepository.findBySocialId("107330656787791997842")
+    public String saveGmails(Member member, String accessToken, String nextPageToken) {
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         long beforeTime = System.currentTimeMillis();
@@ -135,6 +135,7 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
+            Boolean isRead = filterIsRead(gmail.getLabelIds());
 
             String historyId = gmail.getHistoryId();
             LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
@@ -148,6 +149,7 @@ public class GoogleUtils {
                 .ccEmailReceivers(filterCCEmails)
                 .content(content)
                 .html(html)
+                .isRead(isRead)
                 .historyId(historyId)
                 .sendDate(sendDate)
                 .build();
@@ -155,6 +157,10 @@ public class GoogleUtils {
         }
         
         mailBatchRepository.saveAll(mails);
+    }
+
+    public Boolean filterIsRead(List<String> labelIds) {
+        return !labelIds.contains("UNREAD");
     }
 
     public String filterCcAndToEmails(String rawEmails) {
@@ -224,7 +230,7 @@ public class GoogleUtils {
     }
 
     public String deleteAllGmails() {
-        mailRepository.deleteAll();
+        mailRepository.deleteAllInBatch();
         return "성공..!!";
     }
 

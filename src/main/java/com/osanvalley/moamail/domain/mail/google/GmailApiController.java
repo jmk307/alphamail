@@ -1,11 +1,9 @@
 package com.osanvalley.moamail.domain.mail.google;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
+import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.config.CommonApiResponse;
@@ -29,5 +27,14 @@ public class GmailApiController {
             @ApiIgnore @LoginUser Member member,
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showMails(member, pageNumber)));
+    }
+
+    @PostMapping("google")
+    @ApiOperation(value = "Gmail 메일 저장하기")
+    public ResponseEntity<CommonApiResponse<String>> saveGmails(
+            @ApiIgnore @LoginUser Member member,
+            @RequestBody SocialRequest socialRequest) {
+        socialRequest.setMember(member);
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(socialRequest)));
     }
 }
