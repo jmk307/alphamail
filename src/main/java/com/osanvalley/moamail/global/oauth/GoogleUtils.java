@@ -136,7 +136,7 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
-            Readable hasRead = filterHasRead(gmail.getLabelIds());
+            Readable readable = filterHasRead(gmail.getLabelIds());
 
             String historyId = gmail.getHistoryId();
             LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
@@ -150,7 +150,7 @@ public class GoogleUtils {
                 .ccEmailReceivers(filterCCEmails)
                 .content(content)
                 .html(html)
-                .hasRead(hasRead)
+                .readable(readable)
                 .historyId(historyId)
                 .sendDate(sendDate)
                 .build();

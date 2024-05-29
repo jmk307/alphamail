@@ -44,7 +44,7 @@ public class MailResponseDto {
     public static MailResponseDto of(Mail mail) {
         return MailResponseDto.builder()
             .id(mail.getId())
-            .hasRead(mail.getHasRead())
+            .hasRead(mail.getReadable())
             .fromEmail(mail.getFromEmail())
             .social(mail.getSocial())
             .title(mail.getTitle())
