@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.model.Social;
 
 import lombok.AccessLevel;
@@ -19,7 +20,7 @@ import org.springframework.data.domain.Page;
 public class MailResponseDto {
     private Long id;
 
-    private Boolean isRead;
+    private Readable isRead;
 
     private String fromEmail;
 
@@ -31,7 +32,7 @@ public class MailResponseDto {
     private LocalDateTime sendDate;
 
     @Builder
-    public MailResponseDto(Long id, Boolean isRead, String fromEmail, Social social, String title, LocalDateTime sendDate) {
+    public MailResponseDto(Long id, Readable isRead, String fromEmail, Social social, String title, LocalDateTime sendDate) {
         this.id = id;
         this.isRead = isRead;
         this.fromEmail = fromEmail;
@@ -43,6 +44,7 @@ public class MailResponseDto {
     public static MailResponseDto of(Mail mail) {
         return MailResponseDto.builder()
             .id(mail.getId())
+            .isRead(mail.getIsRead())
             .fromEmail(mail.getFromEmail())
             .social(mail.getSocial())
             .title(mail.getTitle())
