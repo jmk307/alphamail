@@ -53,7 +53,7 @@ public class Mail extends BaseTimeEntity {
     private String html;
 
     @Enumerated(EnumType.STRING)
-    private Readable hasRead;
+    private Readable readable;
 
     private String historyId;
 
@@ -61,7 +61,7 @@ public class Mail extends BaseTimeEntity {
 
     @Builder
     public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, 
-            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, LocalDateTime sendDate) {
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable readable, String historyId, LocalDateTime sendDate) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
@@ -71,7 +71,7 @@ public class Mail extends BaseTimeEntity {
         this.ccEmailReceivers = ccEmailReceivers;
         this.content = content;
         this.html = html;
-        this.hasRead = hasRead;
+        this.readable = readable;
         this.historyId = historyId;
         this.sendDate = sendDate;
     }
