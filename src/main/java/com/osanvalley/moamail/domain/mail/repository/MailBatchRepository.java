@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 
 import lombok.RequiredArgsConstructor;
-import static com.osanvalley.moamail.global.util.Uuid.createUUID;
 
 @Repository
 @RequiredArgsConstructor
@@ -22,26 +21,26 @@ public class MailBatchRepository {
     @Transactional
     public void saveAll(List<Mail> mails) {
         String sql = "insert into mail " +
-            "(created_at, updated_at, content, from_email, to_email_receivers, cc_email_receivers, history_id, social, social_member_id, title, id) " +
-        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "(created_at, updated_at, content, html, from_email, to_email_receivers, cc_email_receivers, history_id, send_date, social, social_member_id, title, has_read) " +
+        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(sql, 
                 mails,
                 mails.size(),
                 (PreparedStatement ps, Mail mail) -> {
-                    byte[] id = createUUID();
-
                     ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setString(3, mail.getContent());
-                    ps.setString(4, mail.getFromEmail());
-                    ps.setString(5, mail.getToEmailReceivers());
-                    ps.setString(6, mail.getCcEmailReceivers());
-                    ps.setString(7, mail.getHistoryId());
-                    ps.setString(8, mail.getSocial().name());
-                    ps.setLong(9, mail.getSocialMember().getId());
-                    ps.setString(10, mail.getTitle());
-                    ps.setBytes(11, id);
+                    ps.setString(4, mail.getHtml());
+                    ps.setString(5, mail.getFromEmail());
+                    ps.setString(6, mail.getToEmailReceivers());
+                    ps.setString(7, mail.getCcEmailReceivers());
+                    ps.setString(8, mail.getHistoryId());
+                    ps.setTimestamp(9, Timestamp.valueOf(mail.getSendDate()));
+                    ps.setString(10, mail.getSocial().name());
+                    ps.setLong(11, mail.getSocialMember().getId());
+                    ps.setString(12, mail.getTitle());
+                    ps.setString(13, mail.getHasRead().name());
                 });
     }
 }
