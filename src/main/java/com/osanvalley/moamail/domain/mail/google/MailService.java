@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +33,7 @@ public class MailService {
     // 메일 전체 보기
     @Transactional(readOnly = true)
     public PageDto showMails(Member member, int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, 20);
+        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
         Page<Mail> mails = mailRepository.findAllBySocialMember_Member(member, pageable);
 
         return PageDto.of(mails);
