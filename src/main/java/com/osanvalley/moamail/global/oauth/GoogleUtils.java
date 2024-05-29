@@ -135,7 +135,7 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
-            Boolean isRead = filterIsRead(gmail.getLabelIds());
+            Boolean hasRead = filterHasRead(gmail.getLabelIds());
 
             String historyId = gmail.getHistoryId();
             LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
@@ -149,7 +149,7 @@ public class GoogleUtils {
                 .ccEmailReceivers(filterCCEmails)
                 .content(content)
                 .html(html)
-                .isRead(isRead)
+                .hasRead(hasRead)
                 .historyId(historyId)
                 .sendDate(sendDate)
                 .build();
@@ -159,7 +159,7 @@ public class GoogleUtils {
         mailBatchRepository.saveAll(mails);
     }
 
-    public Boolean filterIsRead(List<String> labelIds) {
+    public Boolean filterHasRead(List<String> labelIds) {
         return !labelIds.contains("UNREAD");
     }
 
