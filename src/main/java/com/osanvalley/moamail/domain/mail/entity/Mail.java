@@ -51,13 +51,15 @@ public class Mail extends BaseTimeEntity {
     @Column(columnDefinition = "LONGTEXT")
     private String html;
 
+    private Boolean isRead;
+
     private String historyId;
 
     private LocalDateTime sendDate;
 
     @Builder
     public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, 
-            String toEmailReceivers, String ccEmailReceivers, String content, String html, String historyId, LocalDateTime sendDate) {
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, Boolean isRead, String historyId, LocalDateTime sendDate) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
@@ -67,6 +69,7 @@ public class Mail extends BaseTimeEntity {
         this.ccEmailReceivers = ccEmailReceivers;
         this.content = content;
         this.html = html;
+        this.isRead = isRead;
         this.historyId = historyId;
         this.sendDate = sendDate;
     }
