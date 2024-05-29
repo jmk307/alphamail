@@ -6,9 +6,18 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+import javax.annotation.PostConstruct;
+import java.util.TimeZone;
+
 @SpringBootApplication
 @EnableJpaAuditing
 public class MoamailApplication extends SpringBootServletInitializer {
+
+	// TimeZone 세팅
+	@PostConstruct
+	public void started() {
+		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(MoamailApplication.class, args);
