@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -135,7 +136,7 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
-            Boolean hasRead = filterHasRead(gmail.getLabelIds());
+            Readable isRead = filterHasRead(gmail.getLabelIds());
 
             String historyId = gmail.getHistoryId();
             LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
@@ -149,7 +150,7 @@ public class GoogleUtils {
                 .ccEmailReceivers(filterCCEmails)
                 .content(content)
                 .html(html)
-                .hasRead(hasRead)
+                .isRead(isRead)
                 .historyId(historyId)
                 .sendDate(sendDate)
                 .build();
@@ -159,8 +160,10 @@ public class GoogleUtils {
         mailBatchRepository.saveAll(mails);
     }
 
-    public Boolean filterHasRead(List<String> labelIds) {
-        return !labelIds.contains("UNREAD");
+    public Readable filterHasRead(List<String> labelIds) {
+        return labelIds.contains("UNREAD")
+                    ? Readable.UNREAD
+                    : Readable.READ;
     }
 
     public String filterCcAndToEmails(String rawEmails) {
