@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 public class MailResponseDto {
     private Long id;
 
-    private Readable isRead;
+    private Readable hasRead;
 
     private String fromEmail;
 
@@ -32,9 +32,9 @@ public class MailResponseDto {
     private LocalDateTime sendDate;
 
     @Builder
-    public MailResponseDto(Long id, Readable isRead, String fromEmail, Social social, String title, LocalDateTime sendDate) {
+    public MailResponseDto(Long id, Readable hasRead, String fromEmail, Social social, String title, LocalDateTime sendDate) {
         this.id = id;
-        this.isRead = isRead;
+        this.hasRead = hasRead;
         this.fromEmail = fromEmail;
         this.social = social;
         this.title = title;
@@ -44,7 +44,7 @@ public class MailResponseDto {
     public static MailResponseDto of(Mail mail) {
         return MailResponseDto.builder()
             .id(mail.getId())
-            .isRead(mail.getIsRead())
+            .hasRead(mail.getHasRead())
             .fromEmail(mail.getFromEmail())
             .social(mail.getSocial())
             .title(mail.getTitle())
