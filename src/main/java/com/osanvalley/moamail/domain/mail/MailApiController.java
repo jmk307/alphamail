@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.mail.google;
+package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
@@ -18,7 +18,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequiredArgsConstructor
 @Api(tags = "Gmail API")
 @RequestMapping("api/mails")
-public class GmailApiController {
+public class MailApiController {
     private final MailService mailService;
 
     @PostMapping("google")
