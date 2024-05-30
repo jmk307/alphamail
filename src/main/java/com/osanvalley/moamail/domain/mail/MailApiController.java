@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.mail.google;
+package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
@@ -18,16 +18,8 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequiredArgsConstructor
 @Api(tags = "Gmail API")
 @RequestMapping("api/mails")
-public class GmailApiController {
+public class MailApiController {
     private final MailService mailService;
-
-    @GetMapping
-    @ApiOperation(value = "메일 전체 읽기")
-    public ResponseEntity<CommonApiResponse<PageDto>> showEmails(
-            @ApiIgnore @LoginUser Member member,
-            @RequestParam int pageNumber) {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.showMails(member, pageNumber)));
-    }
 
     @PostMapping("google")
     @ApiOperation(value = "Gmail 메일 저장하기")
@@ -36,5 +28,13 @@ public class GmailApiController {
             @RequestBody SocialRequest socialRequest) {
         socialRequest.setMember(member);
         return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(socialRequest)));
+    }
+
+    @GetMapping
+    @ApiOperation(value = "메일 전체 읽기")
+    public ResponseEntity<CommonApiResponse<PageDto>> showAllmails(
+            @ApiIgnore @LoginUser Member member,
+            @RequestParam int pageNumber) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.showAllMails(member, pageNumber)));
     }
 }
