@@ -21,14 +21,6 @@ import springfox.documentation.annotations.ApiIgnore;
 public class GmailApiController {
     private final MailService mailService;
 
-    @GetMapping
-    @ApiOperation(value = "메일 전체 읽기")
-    public ResponseEntity<CommonApiResponse<PageDto>> showEmails(
-            @ApiIgnore @LoginUser Member member,
-            @RequestParam int pageNumber) {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.showMails(member, pageNumber)));
-    }
-
     @PostMapping("google")
     @ApiOperation(value = "Gmail 메일 저장하기")
     public ResponseEntity<CommonApiResponse<String>> saveGmails(
@@ -36,5 +28,13 @@ public class GmailApiController {
             @RequestBody SocialRequest socialRequest) {
         socialRequest.setMember(member);
         return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(socialRequest)));
+    }
+
+    @GetMapping
+    @ApiOperation(value = "메일 전체 읽기")
+    public ResponseEntity<CommonApiResponse<PageDto>> showAllmails(
+            @ApiIgnore @LoginUser Member member,
+            @RequestParam int pageNumber) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.showAllMails(member, pageNumber)));
     }
 }
