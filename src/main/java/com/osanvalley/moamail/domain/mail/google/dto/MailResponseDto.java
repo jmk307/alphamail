@@ -3,10 +3,12 @@ package com.osanvalley.moamail.domain.mail.google.dto;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.model.Social;
 
+import com.osanvalley.moamail.global.util.CustomLocalDateTimeSerializer;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,7 +30,8 @@ public class MailResponseDto {
 
     private String title;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd HH:mm", timezone = "Asia/Seoul")
+    // @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd HH:mm", timezone = "Asia/Seoul")
+    @JsonSerialize(using = CustomLocalDateTimeSerializer.class)
     private LocalDateTime sendDate;
 
     @Builder
