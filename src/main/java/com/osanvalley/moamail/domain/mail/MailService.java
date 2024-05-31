@@ -2,6 +2,8 @@ package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
+import com.osanvalley.moamail.domain.member.entity.SocialMember;
+import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -16,9 +18,13 @@ import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.Member;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
+    private final SocialMemberRepository socialMemberRepository;
     private final MailRepository mailRepository;
     private final GoogleUtils googleUtils;
 
@@ -49,12 +55,25 @@ public class MailService {
     public PageDto showReceivedMails(Member member, int pageNumber) {
         Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
 
+        // TODO : 유저가 보낸 메일 제외하고 받은 메일만 보여주는 쿼리 추가
+
         return null;
     }
 
-
     // 보낸메일함 보기
+    @Transactional(readOnly = true)
+    public PageDto showSentMails(Member member, int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
 
+        List<String> memberEmails = member.getSocialMembers().stream()
+                .map(SocialMember::getEmail)
+                .collect(Collectors.toList());
+        System.out.println(memberEmails.size());
+
+        Page<Mail> fromEmails = mailRepository.findAllBySocialMember_MemberAndFromEmailIn(member, memberEmails, pageable);
+
+        return PageDto.of(fromEmails);
+    }
 
     // 내게쓴메일함 보기
 
