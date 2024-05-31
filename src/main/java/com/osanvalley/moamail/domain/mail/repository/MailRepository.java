@@ -21,6 +21,9 @@ public interface MailRepository extends JpaRepository<Mail, Long> {
             "ELSE m.fromEmail " +
             "END AS extractedEmail " +
             "FROM Mail m " +
-            "WHERE m.fromEmail IN :fromEmails")*/
+            "WHERE m.fromEmail IN :fromEmails")
+    Page<Mail> findAllBySocialMember_MemberAndFromEmailIn(Member member, List<String> fromEmails, Pageable pageable);*/
+
+    @Query("select m from Mail m where m.socialMember.member = ?1 and m.fromEmail in ?2")
     Page<Mail> findAllBySocialMember_MemberAndFromEmailIn(Member member, List<String> fromEmails, Pageable pageable);
 }

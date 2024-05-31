@@ -38,6 +38,8 @@ public class Mail extends BaseTimeEntity {
 
     private String title;
 
+    private String alias;
+
     private String fromEmail;
 
     @Column(columnDefinition = "TEXT")
@@ -60,12 +62,13 @@ public class Mail extends BaseTimeEntity {
     private LocalDateTime sendDate;
 
     @Builder
-    public Mail(Long id, SocialMember socialMember, Social social, String title, String fromEmail, 
+    public Mail(Long id, SocialMember socialMember, Social social, String title, String alias, String fromEmail,
             String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, LocalDateTime sendDate) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
         this.title = title;
+        this.alias = alias;
         this.fromEmail = fromEmail;
         this.toEmailReceivers = toEmailReceivers;
         this.ccEmailReceivers = ccEmailReceivers;
