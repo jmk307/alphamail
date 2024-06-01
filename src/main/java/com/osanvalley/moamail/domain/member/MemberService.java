@@ -5,6 +5,7 @@ import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.*;
 import java.util.Optional;
 
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
+import com.osanvalley.moamail.domain.member.dto.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.osanvalley.moamail.domain.member.dto.LoginDto;
-import com.osanvalley.moamail.domain.member.dto.MemberRequestDto;
-import com.osanvalley.moamail.domain.member.dto.MemberResponseDto;
-import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.RegisterType;
@@ -155,5 +152,14 @@ public class MemberService {
         socialMemberRepository.save(socialMember);
 
         return social.name() + " 계정 연동 완료";
+    }
+
+    // 유저 메일 존재여부
+    @Transactional(readOnly = true)
+    public SocialHasDto checkSocial(Member member) {
+        Boolean hasGoogle = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.GOOGLE);
+        Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
+
+        return SocialHasDto.of(hasGoogle, hasNaver);
     }
 }
