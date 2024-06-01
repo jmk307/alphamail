@@ -93,7 +93,8 @@ public class MemberService {
     // 회원가입 및 로그인(소셜)
     @Transactional
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(SocialMemberRequestDto socialMemberRequestDto) {
-        Optional<SocialMember> socialMember = socialMemberRepository.findBySocialId(socialMemberRequestDto.getSocialId());
+        RegisterType registerType = validateRegisterType(socialMemberRequestDto.getProvider());
+        Optional<SocialMember> socialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialMemberRequestDto.getSocialId(), registerType);
 
         if (socialMember.isPresent()) {
             Member member = socialMember.get().getMember();
@@ -103,7 +104,6 @@ public class MemberService {
 
             return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, accessToken)), httpHeaders, HttpStatus.OK);
         } else {
-            RegisterType registerType = validateRegisterType(socialMemberRequestDto.getProvider());
             Social social = validateSocialType(socialMemberRequestDto.getProvider());
 
             Member member = MemberRequestDto.memberToEntity(registerType, socialMemberRequestDto);
@@ -131,5 +131,15 @@ public class MemberService {
         return provider.equals("google")
                 ? Social.GOOGLE
                 : Social.NAVER;
+    }
+
+    // 일반 로그인에 소셜계정 연동
+    @Transactional
+    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(Member member, SocialMemberRequestDto socialMemberRequestDto) {
+        Social social = validateSocialType(socialMemberRequestDto.getProvider());
+        SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
+        socialMemberRepository.save(socialMember);
+
+        return ResponseEntity.ok(CommonApiResponse.of(social.name() + " 계정 연동 완료"));
     }
 }

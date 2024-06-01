@@ -24,21 +24,20 @@ public class MailResponseDto {
 
     private Readable hasRead;
 
-    private String fromEmail;
+    private String alias;
 
     private Social social;
 
     private String title;
 
-    // @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd HH:mm", timezone = "Asia/Seoul")
     @JsonSerialize(using = CustomLocalDateTimeSerializer.class)
     private LocalDateTime sendDate;
 
     @Builder
-    public MailResponseDto(Long id, Readable hasRead, String fromEmail, Social social, String title, LocalDateTime sendDate) {
+    public MailResponseDto(Long id, Readable hasRead, String alias, Social social, String title, LocalDateTime sendDate) {
         this.id = id;
         this.hasRead = hasRead;
-        this.fromEmail = fromEmail;
+        this.alias = alias;
         this.social = social;
         this.title = title;
         this.sendDate = sendDate;
@@ -48,7 +47,7 @@ public class MailResponseDto {
         return MailResponseDto.builder()
             .id(mail.getId())
             .hasRead(mail.getHasRead())
-            .fromEmail(mail.getFromEmail())
+            .alias(mail.getAlias())
             .social(mail.getSocial())
             .title(mail.getTitle())
             .sendDate(mail.getSendDate())

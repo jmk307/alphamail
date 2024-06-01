@@ -2,6 +2,8 @@ package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
+import com.osanvalley.moamail.domain.mail.repository.MailCustomRepository;
+import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -16,11 +18,15 @@ import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.entity.Member;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
     private final MailRepository mailRepository;
     private final GoogleUtils googleUtils;
+    private final MailCustomRepository mailCustomRepository;
 
     // 메일 저장하기(Gmail) -> 지민
     @Transactional
@@ -44,17 +50,31 @@ public class MailService {
         return PageDto.of(mails);
     }
 
-    // 받은메일함 보기
+    // 받은메일함 보기 -> 지민(완)
     @Transactional(readOnly = true)
     public PageDto showReceivedMails(Member member, int pageNumber) {
         Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
 
-        return null;
+        List<String> memberEmails = member.getSocialMembers().stream()
+                .map(SocialMember::getEmail)
+                .collect(Collectors.toList());
+        Page<Mail> receivedMails = mailCustomRepository.findAllReceivedMails(member, memberEmails, pageable);
+
+        return PageDto.of(receivedMails);
     }
 
+    // 보낸메일함 보기 -> 지민(완)
+    @Transactional(readOnly = true)
+    public PageDto showSentMails(Member member, int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
 
-    // 보낸메일함 보기
+        List<String> memberEmails = member.getSocialMembers().stream()
+                .map(SocialMember::getEmail)
+                .collect(Collectors.toList());
+        Page<Mail> fromEmails = mailRepository.findAllBySocialMember_MemberAndFromEmailIn(member, memberEmails, pageable);
 
+        return PageDto.of(fromEmails);
+    }
 
     // 내게쓴메일함 보기
 

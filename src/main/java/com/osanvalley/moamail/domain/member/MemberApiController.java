@@ -2,6 +2,8 @@ package com.osanvalley.moamail.domain.member;
 
 import javax.validation.Valid;
 
+import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +21,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import springfox.documentation.annotations.ApiIgnore;
 
 
 @RestController
@@ -46,6 +49,14 @@ public class MemberApiController {
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signInCommon(
             @Valid @RequestBody LoginDto loginDto) {
         return memberService.signInCommon(loginDto);
+    }
+
+    @PostMapping("common/linkSocialAccount")
+    @ApiOperation(value = "소셜 계정 연동")
+    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(
+            @ApiIgnore @LoginUser Member member,
+            @Valid @RequestBody SocialMemberRequestDto socialMemberRequestDto) {
+        return memberService.linkSocialAccount(member, socialMemberRequestDto);
     }
 
     @PostMapping("social/signupAndIn")
