@@ -147,13 +147,13 @@ public class MemberService {
                 : Social.NAVER;
     }
 
-    // 일반 로그인에 소셜계정 연동
+    // 소셜계정 연동
     @Transactional
-    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(Member member, SocialMemberRequestDto socialMemberRequestDto) {
+    public String linkSocialAccount(Member member, SocialMemberRequestDto socialMemberRequestDto) {
         Social social = validateSocialType(socialMemberRequestDto.getProvider());
         SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
         socialMemberRepository.save(socialMember);
 
-        return ResponseEntity.ok(CommonApiResponse.of(social.name() + " 계정 연동 완료"));
+        return social.name() + " 계정 연동 완료";
     }
 }
