@@ -2,6 +2,7 @@ package com.osanvalley.moamail.domain.member;
 
 import javax.validation.Valid;
 
+import com.osanvalley.moamail.domain.member.dto.*;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.osanvalley.moamail.domain.member.dto.LoginDto;
-import com.osanvalley.moamail.domain.member.dto.MemberRequestDto;
-import com.osanvalley.moamail.domain.member.dto.MemberResponseDto;
-import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
 import com.osanvalley.moamail.global.config.CommonApiResponse;
 
 import io.swagger.annotations.Api;
@@ -64,5 +61,12 @@ public class MemberApiController {
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(
             @RequestBody SocialMemberRequestDto socialMemberRequestDto) {
         return memberService.signUpAndInSocial(socialMemberRequestDto);
+    }
+
+    @GetMapping("social/check")
+    @ApiOperation(value = "소셜 계정 연동 여부 확인")
+    public ResponseEntity<CommonApiResponse<SocialHasDto>> checkSocial(
+            @ApiIgnore @LoginUser Member member) {
+        return ResponseEntity.ok(CommonApiResponse.of(memberService.checkSocial(member)));
     }
 }
