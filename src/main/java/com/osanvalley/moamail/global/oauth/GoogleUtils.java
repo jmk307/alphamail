@@ -127,7 +127,23 @@ public class GoogleUtils {
             MessagePart payload = gmail.getPayload();
 
             String title = filterPayLoadByKeyWord(payload, "Subject");
-            String fromEmail = filterPayLoadByKeyWord(payload, "From");
+
+            String rawFromEmail = filterPayLoadByKeyWord(payload, "From");
+            String alias;
+            String fromEmail;
+
+            Pattern pattern = Pattern.compile("\"?(.*?)\"?\\s*<(.+?)>");
+            Matcher matcher = pattern.matcher(rawFromEmail);
+
+            if (matcher.find()) {
+                // 별칭과 이메일을 추출합니다.
+                alias = matcher.group(1).isEmpty() ? null : matcher.group(1);
+                fromEmail = matcher.group(2);
+            } else {
+                // 별칭이 없는 경우, 이메일만 추출합니다.
+                alias = null;
+                fromEmail = rawFromEmail;
+            }
 
             String rawToEmails = filterPayLoadByKeyWord(payload, "To");
             String rawCcEmails = filterPayLoadByKeyWord(payload, "Cc");
@@ -145,6 +161,7 @@ public class GoogleUtils {
                 .socialMember(socialMember)
                 .social(Social.GOOGLE)
                 .title(title)
+                .alias(alias)
                 .fromEmail(fromEmail)
                 .toEmailReceivers(filterToEmails)
                 .ccEmailReceivers(filterCCEmails)
@@ -226,6 +243,7 @@ public class GoogleUtils {
         if (payload.getHeaders().stream().noneMatch(p -> p.getName().equals(filterKeyword))) {
             return null;
         }
+
         return payload.getHeaders().stream()
                 .filter(p -> p.getName().equals(filterKeyword))
                 .findFirst().get()
