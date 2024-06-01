@@ -4,6 +4,7 @@ import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.*;
 
 import java.util.Optional;
 
+import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +35,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final TokenProvider tokenProvider;
+    private final MailRepository mailRepository;
     private final PasswordEncoder passwordEncoder;
     
     // 회원가입(일반)
@@ -52,7 +54,10 @@ public class MemberService {
         String accessToken = tokenProvider.generateAccessToken(memberReqeustDto.getAuthId());
         HttpHeaders httpHeaders = makeHttpHeaders(accessToken);
 
-        return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, accessToken)), httpHeaders, HttpStatus.OK);
+        Boolean hasGoogle = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.GOOGLE);
+        Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
+
+        return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
     }
 
     // Http Header 정보 생성
@@ -80,7 +85,10 @@ public class MemberService {
         String accessToken = tokenProvider.generateAccessToken(loginDto.getAuthId());
         HttpHeaders httpHeaders = makeHttpHeaders(accessToken);
 
-        return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, accessToken)), httpHeaders, HttpStatus.OK);
+        Boolean hasGoogle = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.GOOGLE);
+        Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
+
+        return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
     }
 
     // 비밀번호 일치확인
@@ -102,7 +110,10 @@ public class MemberService {
             String accessToken = tokenProvider.generateAccessToken(member.getAuthId());
             HttpHeaders httpHeaders = makeHttpHeaders(accessToken);
 
-            return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, accessToken)), httpHeaders, HttpStatus.OK);
+            Boolean hasGoogle = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.GOOGLE);
+            Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
+
+            return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
         } else {
             Social social = validateSocialType(socialMemberRequestDto.getProvider());
 
@@ -115,7 +126,10 @@ public class MemberService {
             String accessToken = tokenProvider.generateAccessToken(member.getAuthId());
             HttpHeaders httpHeaders = makeHttpHeaders(accessToken);
 
-            return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, accessToken)), httpHeaders, HttpStatus.OK);
+            Boolean hasGoogle = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.GOOGLE);
+            Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
+
+            return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
         }
     }
 
