@@ -1,7 +1,6 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
-import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
 import com.osanvalley.moamail.domain.mail.repository.MailCustomRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.Social;
