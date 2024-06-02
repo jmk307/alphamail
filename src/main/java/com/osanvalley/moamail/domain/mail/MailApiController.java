@@ -1,7 +1,6 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
-import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
