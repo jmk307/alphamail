@@ -4,6 +4,8 @@ import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
 import com.osanvalley.moamail.domain.mail.repository.MailCustomRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
+import com.osanvalley.moamail.domain.member.model.Social;
+import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
 import lombok.RequiredArgsConstructor;
 
@@ -27,11 +29,20 @@ public class MailService {
     private final MailRepository mailRepository;
     private final GoogleUtils googleUtils;
     private final MailCustomRepository mailCustomRepository;
+    private final SocialMemberRepository socialMemberRepository;
 
     // 메일 저장하기(Gmail) -> 지민
     @Transactional
-    public String saveGmails(SocialRequest socialRequest) {
-        googleUtils.saveGmails(socialRequest.getMember(), socialRequest.getGoogleAccessToken(), null);
+    public String saveGmails(Member member) {
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
+                .orElseThrow(() -> new IllegalArgumentException("구글 계정이 없습니다."));
+
+        // 구글 어세스토큰 유효성검사
+        if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {
+            googleUtils.reissueGoogleAccessToken(member);
+        }
+
+        googleUtils.saveGmails(member, socialMember.getGoogleAccessToken(), null);
 
         // TODO : 기령 만든 AI 모델로 스팸 분류 기능 추가하기
 

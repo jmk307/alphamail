@@ -36,6 +36,10 @@ public class SocialMember extends BaseTimeEntity {
 
     private String imapPassword;
 
+    private String googleAccessToken;
+
+    private String googleRefreshToken;
+
     private String email;
 
     private String profileImgUrl;
@@ -50,14 +54,20 @@ public class SocialMember extends BaseTimeEntity {
     private List<Mail> mails = new ArrayList<>();
 
     @Builder
-    public SocialMember(Long id, String socialId, String imapPassword, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
+    public SocialMember(Long id, String socialId, String imapPassword, String googleAccessToken, String googleRefreshToken, String email, String profileImgUrl, Social social, Member member, List<Mail> mails) {
         this.id = id;
         this.socialId = socialId;
         this.imapPassword = imapPassword;
+        this.googleAccessToken = googleAccessToken;
+        this.googleRefreshToken = googleRefreshToken;
         this.email = email;
         this.profileImgUrl = profileImgUrl;
         this.social = social;
         this.member = member;
         this.mails = mails;
+    }
+
+    public void updateGoogleAccessToken(String googleAccessToken) {
+        this.googleAccessToken = googleAccessToken;
     }
 }

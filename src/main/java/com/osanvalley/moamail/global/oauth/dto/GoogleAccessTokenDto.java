@@ -7,11 +7,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GoogleAccessTokenDto {
-    private String accessToken;
+    private String access_token;
 
-    private int expiresIn;
+    private int expires_in;
 
     private String scope;
 
-    private String tokenType;
+    private String token_type;
 }

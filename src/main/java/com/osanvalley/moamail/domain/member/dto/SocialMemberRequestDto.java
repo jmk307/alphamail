@@ -23,12 +23,18 @@ public class SocialMemberRequestDto {
 
     private String socialId;
 
+    private String googleAccessToken;
+
+    private String googleRefreshToken;
+
     public static SocialMember socialMemberToEntity(Social social, Member member, SocialMemberRequestDto socialMemberRequestDto) {
         return SocialMember.builder()
                 .socialId(socialMemberRequestDto.getSocialId())
                 .email(socialMemberRequestDto.getEmail())
                 .profileImgUrl(socialMemberRequestDto.getProfileImgUrl())
                 .social(social)
+                .googleAccessToken(socialMemberRequestDto.getGoogleAccessToken())
+                .googleRefreshToken(socialMemberRequestDto.getGoogleRefreshToken())
                 .member(member)
             .build();
     }
