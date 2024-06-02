@@ -1,5 +1,8 @@
 package com.osanvalley.moamail.global.oauth;
 
+import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
+import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +19,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequiredArgsConstructor
 @Api(tags = "OAUTH API 테스트")
 @RequestMapping("api/oauth")
-@ApiIgnore
+// @ApiIgnore
 public class OauthApiController {
     private final GoogleUtils googleUtils;
 
@@ -48,5 +51,12 @@ public class OauthApiController {
     @ApiOperation(value = "Gmail 삭제하기")
     public ResponseEntity<CommonApiResponse<String>> deleteAllMails() {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.deleteAllGmails()));
+    }
+
+    @PatchMapping("google/reissue")
+    @ApiOperation(value = "Gmail 토큰 재발급")
+    public ResponseEntity<CommonApiResponse<String>> reissueAccessToken(
+            @ApiIgnore @LoginUser Member member) {
+        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.reissueGoogleAccessToken(member)));
     }
 }

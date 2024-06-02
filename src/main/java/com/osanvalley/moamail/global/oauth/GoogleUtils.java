@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,6 +36,7 @@ import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
 import com.osanvalley.moamail.global.util.Date;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -45,6 +48,12 @@ public class GoogleUtils {
     private final SocialMemberRepository socialMemberRepository;
     private final MailBatchRepository mailBatchRepository;
     private final WebClient webClient;
+
+    @Value("${google.clientId}")
+    private String CLIENT_ID;
+
+    @Value("${google.clientSecret}")
+    private String CLIENT_SECRET;
 
     @Transactional(readOnly = true)
     public GmailResponseDto showGmailMessage(String accessToken, String messageId) {
@@ -317,6 +326,50 @@ public class GoogleUtils {
             System.out.println(e.getMessage());
             throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
         }
-        
+    }
+
+    // 구글 어세스토큰 재발급
+    @Transactional
+    public String reissueGoogleAccessToken(Member member) {
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
+                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        final String googleTokenUrl = "https://oauth2.googleapis.com/token";
+        GoogleAccessTokenDto googleAccessTokenDto;
+
+        try {
+            googleAccessTokenDto =  webClient.post()
+                .uri(googleTokenUrl)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&refresh_token=" + socialMember.getGoogleRefreshToken() + "&grant_type=refresh_token")
+                .retrieve()
+                .bodyToMono(GoogleAccessTokenDto.class)
+            .block();
+
+            socialMember.updateGoogleAccessToken(googleAccessTokenDto.getAccess_token());
+
+            return "토큰 재발급 성공..!";
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+        }
+    }
+
+    public boolean isGoogleAccessTokenValid(String googleAccessToken) {
+        try {
+            String tokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?access_token=" + googleAccessToken;
+            webClient.get()
+                    .uri(tokenInfoUrl)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()) {
+                return false;
+            } else {
+                throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+            }
+        }
     }
 }
