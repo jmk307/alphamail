@@ -24,10 +24,8 @@ public class MailApiController {
     @PostMapping("google")
     @ApiOperation(value = "Gmail 메일 저장하기")
     public ResponseEntity<CommonApiResponse<String>> saveGmails(
-            @ApiIgnore @LoginUser Member member,
-            @RequestBody SocialRequest socialRequest) {
-        socialRequest.setMember(member);
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(socialRequest)));
+            @ApiIgnore @LoginUser Member member) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(member)));
     }
 
     @GetMapping
