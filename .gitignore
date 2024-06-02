@@ -37,6 +37,7 @@ out/
 .vscode/
 
 # dotoenv
+*.yml
 
 
 >>>>>>> feature/member
