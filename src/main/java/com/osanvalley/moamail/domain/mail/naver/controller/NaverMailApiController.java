@@ -15,7 +15,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@Api(tags = "네이버메일")
+@Api(tags = "Naver Mail API")
 @RequestMapping("api/naverMail")
 public class NaverMailApiController {
     private final NaverMailService naverMailService;

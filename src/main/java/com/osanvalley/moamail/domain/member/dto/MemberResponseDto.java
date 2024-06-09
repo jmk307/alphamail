@@ -25,20 +25,26 @@ public class MemberResponseDto {
 
     private Sex sex;
 
+    private Boolean hasGoogle;
+
+    private Boolean hasNaver;
+
     private String accessToken;
 
     @Builder
-    public MemberResponseDto(Long id, String authId, String phoneNumber, String nickname, String birth, Sex sex, String accessToken) {
+    public MemberResponseDto(Long id, String authId, String phoneNumber, String nickname, String birth, Sex sex, Boolean hasGoogle, Boolean hasNaver, String accessToken) {
         this.id = id;
         this.authId = authId;
         this.phoneNumber = phoneNumber;
         this.nickname = nickname;
         this.birth = birth;
         this.sex = sex;
+        this.hasGoogle = hasGoogle;
+        this.hasNaver = hasNaver;
         this.accessToken = accessToken;
     }
 
-    public static MemberResponseDto of(Member member) {
+    public static MemberResponseDto of(Member member, Boolean hasGoogle, Boolean hasNaver) {
         return MemberResponseDto.builder()
                 .id(member.getId())
                 .authId(member.getAuthId())
@@ -46,10 +52,12 @@ public class MemberResponseDto {
                 .nickname(member.getNickname())
                 .birth(member.getBirth())
                 .sex(member.getSex())
+                .hasGoogle(hasGoogle)
+                .hasNaver(hasNaver)
         .build();
     }
 
-    public static MemberResponseDto of(Member member, String accessToken) {
+    public static MemberResponseDto of(Member member, Boolean hasGoogle, Boolean hasNaver, String accessToken) {
         return MemberResponseDto.builder()
                 .id(member.getId())
                 .authId(member.getAuthId())
@@ -57,6 +65,8 @@ public class MemberResponseDto {
                 .nickname(member.getNickname())
                 .birth(member.getBirth())
                 .sex(member.getSex())
+                .hasGoogle(hasGoogle)
+                .hasNaver(hasNaver)
                 .accessToken(accessToken)
         .build();
     }

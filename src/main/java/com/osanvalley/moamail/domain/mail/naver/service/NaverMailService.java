@@ -7,6 +7,7 @@ import com.osanvalley.moamail.domain.mail.naver.util.NaverImapMailConnector;
 import com.osanvalley.moamail.domain.mail.naver.util.NaverSmtpMailConnector;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
+import com.osanvalley.moamail.domain.member.model.RegisterType;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptService;
 import com.osanvalley.moamail.global.error.ErrorCode;
@@ -38,7 +39,7 @@ public class NaverMailService {
      */
     @Transactional
     public PostNaverImapConnectInfoResponseDto setImapConnectInfo(String socialId, String emailAddress, String password) {
-        SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
+        SocialMember findSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialId, RegisterType.NAVER)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
         String encryptedPassword = twoWayEncryptService.encrypt(password);
         findSocialMember.setEmail(emailAddress);
@@ -55,7 +56,7 @@ public class NaverMailService {
      */
     @Transactional(readOnly = true)
     public GetNaverImapConnectInfoResponseDto getMailConnectInfo(String socialId) {
-        SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
+        SocialMember findSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialId, RegisterType.NAVER)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
         return new GetNaverImapConnectInfoResponseDto(findSocialMember.getEmail());
     }
@@ -66,7 +67,7 @@ public class NaverMailService {
      * @param socialId 사용자의 IMAP 정보를 받아오기 위해 필요한 소셜 ID 정보 (인증 기능 개발 이전)
      */
     public PostNaverMailContentImportResponseDto saveMailContents(String socialId) throws MessagingException, IOException {
-        SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
+        SocialMember findSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialId, RegisterType.NAVER)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());
@@ -102,7 +103,7 @@ public class NaverMailService {
     }
 
     public PostNaverMailSendResponseDto sendNaverMailContent(String socialId, PostNaverMailSendRequestDto reqDto) throws MessagingException {
-        SocialMember findSocialMember = socialMemberRepository.findBySocialId(socialId)
+        SocialMember findSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialId, RegisterType.NAVER)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
         String decryptPassword = twoWayEncryptService.decrypt(findSocialMember.getImapPassword());

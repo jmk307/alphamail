@@ -1,5 +1,26 @@
 package com.osanvalley.moamail.global.oauth;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import com.osanvalley.moamail.domain.mail.model.Readable;
+import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
@@ -12,22 +33,13 @@ import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
+import com.osanvalley.moamail.global.util.Date;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -36,6 +48,12 @@ public class GoogleUtils {
     private final SocialMemberRepository socialMemberRepository;
     private final MailBatchRepository mailBatchRepository;
     private final WebClient webClient;
+
+    @Value("${google.clientId}")
+    private String CLIENT_ID;
+
+    @Value("${google.clientSecret}")
+    private String CLIENT_SECRET;
 
     @Transactional(readOnly = true)
     public GmailResponseDto showGmailMessage(String accessToken, String messageId) {
@@ -47,48 +65,68 @@ public class GoogleUtils {
         return getGmailMessages(accessToken, nextPageToken);
     }
 
-    @Transactional
-    public String saveGmails(String accessToken, String nextPageToken) {
-        long beforeTime = System.currentTimeMillis();
-        SocialMember socialMember = socialMemberRepository.findBySocialId("107330656787791997842")
+    public String saveGmails(Member member, String accessToken, String nextPageToken) {
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
 
+        long beforeTime = System.currentTimeMillis();
         String pageToken = nextPageToken;
         int count = 0;
         while (true) {
             System.out.println(pageToken);
+            
             GmailListResponseDto gmailList = getGmailMessages(accessToken, pageToken);
             if (gmailList == null) {
                 break;
             }
+
             List<String> messageIds = gmailList.messages.stream()
                 .map(Message::getId)
                 .collect(Collectors.toList());
             count += messageIds.size();
-            
-            // 각 이메일 ID에 대한 병렬 요청 생성
-            Flux.fromIterable(messageIds)
+
+            List<GmailResponseDto> gmails = new ArrayList<>();
+
+            if (messageIds.size() == 100) {
+                for (int i = 0; i < messageIds.size(); i += 20) {
+                    int start = i;
+                    int end = Math.min(i + 20, messageIds.size());
+
+                    List<String> subMessageIds = messageIds.subList(start, end);
+                    gmails.addAll(fluxReadGmails(subMessageIds, accessToken, socialMember));
+                }
+            } else {
+                // 각 이메일 ID에 대한 병렬 요청 생성
+                gmails.addAll(fluxReadGmails(messageIds, accessToken, socialMember));
+            }
+
+            batchSaveGmails(socialMember, gmails);
+
+            pageToken = gmailList.getNextPageToken();
+            if (count == 1000 || pageToken == null) {
+                break;
+            }
+
+            System.out.println("메일 bulk insert 성공...!");
+            System.out.println(count);
+        }
+        
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime) / 1000;
+        System.out.println("시간차이(m) : " + secDiffTime);
+
+        return "성공..!!";
+    }
+
+    public List<GmailResponseDto> fluxReadGmails(List<String> messageIds, String accessToken, SocialMember socialMember) {
+        return Flux.fromIterable(messageIds)
                 .parallel() // 병렬 실행을 위해 Flux를 병렬 스트림으로 변환
                 .runOn(Schedulers.parallel()) // 병렬 스트림에서 실행을 병렬 스케줄러로 지정
                 .flatMap(messageId -> createIndividualRequest(accessToken, messageId)) // 각각의 요청을 병렬적으로 실행
                 .sequential() // 결과를 병렬 스트림에서 순차적으로 처리하도록 변환
                 .collectList() // 모든 Gmail을 리스트로 수집
-                .doOnNext(gmails -> batchSaveGmails(socialMember, gmails)) // 저장소에 모든 Gmail을 저장
+                // .doOnNext(gmails -> batchSaveGmails(socialMember, gmails)) // 저장소에 모든 Gmail을 저장
                 .block(); // 모든 작업이 완료될 때까지 블록
-            
-            System.out.println("메일 bulk insert 성공...!");
-            System.out.println(count);
-            pageToken = gmailList.getNextPageToken();
-            if (count == 2000) {
-                break;
-            }
-        }
-
-        long afterTime = System.currentTimeMillis();
-        long secDiffTime = (afterTime - beforeTime) / 1000;
-        System.out.println("시간차이(m) : " + secDiffTime);
-        
-        return "성공..!!";
     }
 
     public void batchSaveGmails(SocialMember socialMember, List<GmailResponseDto> gmails) {
@@ -98,7 +136,23 @@ public class GoogleUtils {
             MessagePart payload = gmail.getPayload();
 
             String title = filterPayLoadByKeyWord(payload, "Subject");
-            String fromEmail = filterPayLoadByKeyWord(payload, "From");
+
+            String rawFromEmail = filterPayLoadByKeyWord(payload, "From");
+            String alias;
+            String fromEmail;
+
+            Pattern pattern = Pattern.compile("\"?(.*?)\"?\\s*<(.+?)>");
+            Matcher matcher = pattern.matcher(rawFromEmail);
+
+            if (matcher.find()) {
+                // 별칭과 이메일을 추출합니다.
+                alias = matcher.group(1).isEmpty() ? null : matcher.group(1);
+                fromEmail = matcher.group(2);
+            } else {
+                // 별칭이 없는 경우, 이메일만 추출합니다.
+                alias = null;
+                fromEmail = rawFromEmail;
+            }
 
             String rawToEmails = filterPayLoadByKeyWord(payload, "To");
             String rawCcEmails = filterPayLoadByKeyWord(payload, "Cc");
@@ -107,23 +161,35 @@ public class GoogleUtils {
 
             String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
+            Readable hasRead = filterHasRead(gmail.getLabelIds());
+
             String historyId = gmail.getHistoryId();
+            LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
 
             Mail mail = Mail.builder()
                 .socialMember(socialMember)
                 .social(Social.GOOGLE)
                 .title(title)
+                .alias(alias)
                 .fromEmail(fromEmail)
                 .toEmailReceivers(filterToEmails)
                 .ccEmailReceivers(filterCCEmails)
                 .content(content)
                 .html(html)
+                .hasRead(hasRead)
                 .historyId(historyId)
+                .sendDate(sendDate)
                 .build();
             mails.add(mail);
         }
         
         mailBatchRepository.saveAll(mails);
+    }
+
+    public Readable filterHasRead(List<String> labelIds) {
+        return labelIds.contains("UNREAD")
+                    ? Readable.UNREAD
+                    : Readable.READ;
     }
 
     public String filterCcAndToEmails(String rawEmails) {
@@ -156,6 +222,16 @@ public class GoogleUtils {
         }
     }
 
+    public String filterSendDate(MessagePart payload) {
+        String rawSendDate = payload.getHeaders().stream()
+                .filter(p -> p.getName().equals("Date"))
+                .findFirst().get()
+                .getValue();
+        String trimSendDate = rawSendDate.replaceAll("\\s+", " ");
+
+        return trimSendDate;
+    }
+
     public String filterContentAndHtml(MessagePart payload, String filterKeyword) {
         if (!payload.getMimeType().equals("multipart/alternative")) {
             return payload.getBody().getData();
@@ -176,10 +252,16 @@ public class GoogleUtils {
         if (payload.getHeaders().stream().noneMatch(p -> p.getName().equals(filterKeyword))) {
             return null;
         }
+
         return payload.getHeaders().stream()
                 .filter(p -> p.getName().equals(filterKeyword))
                 .findFirst().get()
                 .getValue();
+    }
+
+    public String deleteAllGmails() {
+        mailRepository.deleteAllInBatch();
+        return "성공..!!";
     }
 
     // Gmail 메시지 하나 가져오기
@@ -238,12 +320,56 @@ public class GoogleUtils {
                 .uri("https://www.googleapis.com/gmail/v1/users/me/messages/{messageId}", messageId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .retrieve()
-                .onStatus(status -> status.is4xxClientError(), response -> response.bodyToMono(String.class).map(Exception::new))
+                .onStatus(HttpStatus::is4xxClientError, response -> response.bodyToMono(String.class).map(Exception::new))
                 .bodyToMono(GmailResponseDto.class); // GmailResponseDto를 반환하는 요청
         } catch (Exception e) {
             System.out.println(e.getMessage());
             throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
         }
-        
+    }
+
+    // 구글 어세스토큰 재발급
+    @Transactional
+    public String reissueGoogleAccessToken(Member member) {
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
+                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+
+        final String googleTokenUrl = "https://oauth2.googleapis.com/token";
+        GoogleAccessTokenDto googleAccessTokenDto;
+
+        try {
+            googleAccessTokenDto =  webClient.post()
+                .uri(googleTokenUrl)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&refresh_token=" + socialMember.getGoogleRefreshToken() + "&grant_type=refresh_token")
+                .retrieve()
+                .bodyToMono(GoogleAccessTokenDto.class)
+            .block();
+
+            socialMember.updateGoogleAccessToken(googleAccessTokenDto.getAccess_token());
+
+            return "토큰 재발급 성공..!";
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+        }
+    }
+
+    public boolean isGoogleAccessTokenValid(String googleAccessToken) {
+        try {
+            String tokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?access_token=" + googleAccessToken;
+            webClient.get()
+                    .uri(tokenInfoUrl)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+            return true;
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode().is4xxClientError() || e.getStatusCode().is5xxServerError()) {
+                return false;
+            } else {
+                throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+            }
+        }
     }
 }
