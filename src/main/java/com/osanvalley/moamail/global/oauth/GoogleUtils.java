@@ -329,7 +329,6 @@ public class GoogleUtils {
     }
 
     // 구글 어세스토큰 재발급
-    @Transactional
     public String reissueGoogleAccessToken(Member member) {
         SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));

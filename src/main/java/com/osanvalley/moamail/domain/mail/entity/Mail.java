@@ -61,9 +61,11 @@ public class Mail extends BaseTimeEntity {
 
     private LocalDateTime sendDate;
 
+    private Boolean isSpam;
+
     @Builder
     public Mail(Long id, SocialMember socialMember, Social social, String title, String alias, String fromEmail,
-            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, LocalDateTime sendDate) {
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, LocalDateTime sendDate, Boolean isSpam) {
         this.id = id;
         this.socialMember = socialMember;
         this.social = social;
@@ -77,5 +79,6 @@ public class Mail extends BaseTimeEntity {
         this.hasRead = hasRead;
         this.historyId = historyId;
         this.sendDate = sendDate;
+        this.isSpam = isSpam;
     }
 }
