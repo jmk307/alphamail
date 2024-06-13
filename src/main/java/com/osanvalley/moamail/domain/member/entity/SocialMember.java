@@ -3,9 +3,13 @@ package com.osanvalley.moamail.domain.member.entity;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.global.config.entity.BaseTimeEntity;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,14 +23,14 @@ public class SocialMember extends BaseTimeEntity {
     @Column(length = 32)
     private String socialId;
 
-    @Setter
+    private String imapAccount;
+
     private String imapPassword;
 
     private String googleAccessToken;
 
     private String googleRefreshToken;
 
-    @Setter
     private String email;
 
     private String profileImgUrl;
@@ -40,13 +44,14 @@ public class SocialMember extends BaseTimeEntity {
     @OneToMany(mappedBy = "socialMember", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Mail> mails = new ArrayList<>();
 
-    @Setter
-    private long lastStoredMsgUID;
+    @NotNull
+    private Long lastStoredMsgUID;
 
     @Builder
-    public SocialMember(Long id, String socialId, String imapPassword, String googleAccessToken, String googleRefreshToken, String email, String profileImgUrl, Social social, Member member, List<Mail> mails, Long lastStoredMsgUID) {
+    public SocialMember(Long id, String socialId, String imapAccount, String imapPassword, String googleAccessToken, String googleRefreshToken, String email, String profileImgUrl, Social social, Member member, List<Mail> mails, Long lastStoredMsgUID) {
         this.id = id;
         this.socialId = socialId;
+        this.imapAccount = imapAccount;
         this.imapPassword = imapPassword;
         this.googleAccessToken = googleAccessToken;
         this.googleRefreshToken = googleRefreshToken;
@@ -60,5 +65,13 @@ public class SocialMember extends BaseTimeEntity {
 
     public void updateGoogleAccessToken(String googleAccessToken) {
         this.googleAccessToken = googleAccessToken;
+    }
+
+    public void updateImapPassword(String encryptedPassword) {
+        this.imapPassword = encryptedPassword;
+    }
+
+    public void updateLastStoredMsgUID(Long lastStoredMsgUID) {
+        this.lastStoredMsgUID = lastStoredMsgUID;
     }
 }

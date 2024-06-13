@@ -1,18 +1,7 @@
 package com.osanvalley.moamail.domain.member;
 
-import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.*;
-
-import java.util.Optional;
-
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.dto.*;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.RegisterType;
@@ -20,11 +9,23 @@ import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.domain.member.repository.MemberRepository;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.config.CommonApiResponse;
+import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptService;
 import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
-
+import com.osanvalley.moamail.global.util.Uuid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.AUTHORIZATION;
+import static com.osanvalley.moamail.global.config.security.jwt.TokenProvider.BEARER;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +35,8 @@ public class MemberService {
     private final TokenProvider tokenProvider;
     private final MailRepository mailRepository;
     private final PasswordEncoder passwordEncoder;
-    
+    private final TwoWayEncryptService twoWayEncryptService;
+
     // 회원가입(일반)
     @Transactional
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpCommon(MemberRequestDto memberReqeustDto) {
@@ -161,5 +163,27 @@ public class MemberService {
         Boolean hasNaver = mailRepository.existsBySocialMember_MemberAndSocial(member, Social.NAVER);
 
         return SocialHasDto.of(hasGoogle, hasNaver);
+    }
+
+    // IMAP 셋팅
+    @Transactional
+    public String setImapAccount(Member member, ImapAccountRequestDto imapAccountRequestDto) {
+        Optional<SocialMember> findSocialMember = socialMemberRepository.findByMember_AuthIdAndEmail(member.getAuthId(), imapAccountRequestDto.getImapAccount() + "@naver.com");
+        if(findSocialMember.isPresent()) {
+            SocialMember socialMember = findSocialMember.get();
+            if(socialMember.getImapAccount() != imapAccountRequestDto.getImapAccount()) { // 불러올 IMAP ID가 변경된 경우
+                socialMember.updateLastStoredMsgUID(0L);
+            }
+            String encryptedPassword = twoWayEncryptService.encrypt(imapAccountRequestDto.getImapPassword());
+            socialMember.updateImapPassword(encryptedPassword);
+        } else { // IMAP 값을 처음 셋팅하는 경우
+            byte[] uuidByte = Uuid.createUUID();
+            String uuidHex = Uuid.bytesToHex(uuidByte);
+            String encryptedPassword = twoWayEncryptService.encrypt(imapAccountRequestDto.getImapPassword());
+            SocialMember socialMember = imapAccountRequestDto.socialMember_ImapAccount_ToEntity(uuidHex, member, imapAccountRequestDto.getImapAccount(), encryptedPassword, 0L);
+            socialMemberRepository.save(socialMember);
+        }
+
+        return "IMAP 계정 셋팅 완료";
     }
 }

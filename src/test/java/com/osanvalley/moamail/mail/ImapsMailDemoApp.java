@@ -26,6 +26,7 @@ public class ImapsMailDemoApp {
 
         Message[] msgArray = imapsMailService.getMessages(false);
         int mailContentCount = 5;
+        System.out.println("msg = " + msgArray[0]);
         for(int i = msgArray.length - 1; i >= msgArray.length - mailContentCount; i--) {
             //        제목, 발신자, 수신자(리스트), 참조자(리스트), 컨텐츠, 히스토리ID
             Message msg = msgArray[i];
@@ -61,7 +62,7 @@ public class ImapsMailDemoApp {
             } else {
                 System.out.printf("메일내용: %s%n", msg.getContent());
             }
-            
+
             long messageUID = ((UIDFolder) inbox).getUID(msg);
             System.out.println("messageUID = " + messageUID);
 
