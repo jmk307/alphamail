@@ -13,12 +13,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import springfox.documentation.annotations.ApiIgnore;
 
-import javax.mail.MessagingException;
-import java.io.IOException;
-
 @RestController
 @RequiredArgsConstructor
-@Api(tags = "mail API")
+@Api(tags = "Gmail API")
 @RequestMapping("api/mails")
 public class MailApiController {
     private final MailService mailService;
@@ -52,12 +49,5 @@ public class MailApiController {
             @ApiIgnore @LoginUser Member member,
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showSentMails(member, pageNumber)));
-    }
-
-    @PostMapping("naver")
-    @ApiOperation(value = "NAVER 메일 저장하기")
-    public ResponseEntity<CommonApiResponse<String>> saveNaverMails(
-            @ApiIgnore @LoginUser Member member) throws MessagingException, IOException {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveNaverMails(member)));
     }
 }

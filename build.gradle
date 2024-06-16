@@ -27,16 +27,9 @@ repositories {
 }
 
 dependencies {
-	// imap mail 설정을 위한 라이브러리 불러오기 시작
-	implementation group: 'javax.mail', name: 'mail', version: '1.4.7'
-	implementation group: 'javax.activation', name: 'activation', version: '1.1.1'
-	compile 'javax.mail:mail:1.4.7'
-	// imap mail 설정을 위한 라이브러리 불러오기 끝
-	
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'junit:junit:4.13.1'
-	testImplementation 'org.projectlombok:lombok:1.18.28'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
