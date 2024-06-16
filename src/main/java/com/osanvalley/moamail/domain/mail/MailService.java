@@ -2,8 +2,8 @@ package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
-import com.osanvalley.moamail.domain.mail.naver.util.MessageToEntityConverter;
-import com.osanvalley.moamail.domain.mail.naver.util.NaverImapMailConnector;
+import com.osanvalley.moamail.global.imap.NaverUtils;
+import com.osanvalley.moamail.global.imap.NaverImapMailConnector;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
 import com.osanvalley.moamail.domain.mail.repository.MailCustomRepository;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
@@ -121,7 +121,7 @@ public class MailService {
         Folder inbox = conn.connect();
         Message[] messages = conn.getMessages();
         int messageCount = inbox.getMessageCount();
-        MessageToEntityConverter converter = new MessageToEntityConverter(inbox);
+        NaverUtils naverUtils = new NaverUtils(inbox);
         List<Mail> mails = new ArrayList<>();
         long lastStoredMsgUID = findSocialMember.getLastStoredMsgUID();
 
@@ -129,7 +129,7 @@ public class MailService {
             long messageUID = ((UIDFolder) inbox).getUID(messages[i]);
             if(messageUID > lastStoredMsgUID) {
                 System.out.println("메일 엔티티로 " + ((int)i+1) +"번째 변환 중입니다.");
-                Mail mail = converter.toMailEntity(messages[i], findSocialMember);
+                Mail mail = naverUtils.toMailEntity(messages[i], findSocialMember);
                 mails.add(mail);
             } else {
                 break;

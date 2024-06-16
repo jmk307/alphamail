@@ -1,6 +1,4 @@
-package com.osanvalley.moamail.domain.mail.naver.util;
-
-import com.osanvalley.moamail.domain.mail.util.ImapMailConnector;
+package com.osanvalley.moamail.global.imap;
 
 import javax.mail.*;
 import java.util.Properties;

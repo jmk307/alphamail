@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.mail.naver.util;
+package com.osanvalley.moamail.global.imap;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.model.Readable;
@@ -16,11 +16,11 @@ import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MessageToEntityConverter {
+public class NaverUtils {
 
     private final Folder folder;
 
-    public MessageToEntityConverter(Folder folder) {
+    public NaverUtils(Folder folder) {
         this.folder = folder;
     }
 

@@ -1,4 +1,4 @@
-package com.osanvalley.moamail.domain.mail.util;
+package com.osanvalley.moamail.global.imap;
 
 import javax.mail.*;
 
