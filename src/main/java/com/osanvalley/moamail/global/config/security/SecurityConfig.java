@@ -1,7 +1,11 @@
 package com.osanvalley.moamail.global.config.security;
 
-import java.util.Arrays;
-
+import com.osanvalley.moamail.global.config.security.jwt.JwtAccessDeniedHandler;
+import com.osanvalley.moamail.global.config.security.jwt.JwtAuthenticationEntryPoint;
+import com.osanvalley.moamail.global.config.security.jwt.JwtSecurityConfig;
+import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,21 +15,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.encrypt.AesBytesEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.firewall.DefaultHttpFirewall;
-import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.osanvalley.moamail.global.config.security.jwt.JwtAccessDeniedHandler;
-import com.osanvalley.moamail.global.config.security.jwt.JwtAuthenticationEntryPoint;
-import com.osanvalley.moamail.global.config.security.jwt.JwtSecurityConfig;
-import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -35,6 +33,10 @@ public class SecurityConfig {
     private final TokenProvider tokenProvider;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    @Value("${two-way-security.secret}")
+    private String secert;
+    @Value("${two-way-security.salt}")
+    private String salt;
 
     @Bean
     public PasswordEncoder getPasswordEncoder() {
@@ -49,6 +51,11 @@ public class SecurityConfig {
                         ,"/favicon.ico"
                         ,"/error"
                 );
+    }
+
+    @Bean
+    public AesBytesEncryptor aesBytesEncryptor() {
+        return new AesBytesEncryptor(secert, salt);
     }
 
     @Bean

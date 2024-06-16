@@ -1,24 +1,17 @@
 package com.osanvalley.moamail.domain.member;
 
-import javax.validation.Valid;
-
 import com.osanvalley.moamail.domain.member.dto.*;
 import com.osanvalley.moamail.domain.member.entity.Member;
-import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.osanvalley.moamail.global.config.CommonApiResponse;
-
+import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
 
 
 @RestController
@@ -68,5 +61,13 @@ public class MemberApiController {
     public ResponseEntity<CommonApiResponse<SocialHasDto>> checkSocial(
             @ApiIgnore @LoginUser Member member) {
         return ResponseEntity.ok(CommonApiResponse.of(memberService.checkSocial(member)));
+    }
+
+    @PostMapping("social/setImapAccount")
+    @ApiOperation(value = "로그인한 유저의 IMAP 계정 셋팅(NAVER)")
+    public ResponseEntity<CommonApiResponse<String>> setImapAccount(
+            @ApiIgnore @LoginUser Member member,
+            @RequestBody ImapAccountRequestDto imapAccountRequestDto) {
+        return ResponseEntity.ok(CommonApiResponse.of(memberService.setImapAccount(member, imapAccountRequestDto)));
     }
 }
