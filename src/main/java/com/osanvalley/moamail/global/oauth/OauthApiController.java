@@ -3,6 +3,7 @@ package com.osanvalley.moamail.global.oauth;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.config.security.jwt.annotation.LoginUser;
 import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,5 +59,19 @@ public class OauthApiController {
     public ResponseEntity<CommonApiResponse<String>> reissueAccessToken(
             @ApiIgnore @LoginUser Member member) {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.reissueGoogleAccessToken(member)));
+    }
+
+    @GetMapping("google/token")
+    @ApiOperation(value = "Gmail 토큰 가져오기")
+    public ResponseEntity<CommonApiResponse<GoogleAccessTokenDto>> getGoogleAccessToken(
+            @RequestParam(required = false) String code) {
+        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.getGoogleAccessToken(code)));
+    }
+
+    @GetMapping("google/info")
+    @ApiOperation(value = "Google 정보 가져오기")
+    public ResponseEntity<CommonApiResponse<GoogleMemberInfoDto>> getGoogleInfo(
+            @RequestParam(required = false) String googleAccessToken) {
+        return ResponseEntity.ok(CommonApiResponse.of(googleUtils.getGoogleMemberInfo(googleAccessToken)));
     }
 }

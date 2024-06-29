@@ -1,5 +1,6 @@
 package com.osanvalley.moamail.domain.member;
 
+import com.osanvalley.moamail.domain.mail.google.dto.SocialRequest;
 import com.osanvalley.moamail.domain.mail.repository.MailRepository;
 import com.osanvalley.moamail.domain.member.dto.*;
 import com.osanvalley.moamail.domain.member.entity.Member;
@@ -13,6 +14,9 @@ import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptServic
 import com.osanvalley.moamail.global.config.security.jwt.TokenProvider;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
+import com.osanvalley.moamail.global.oauth.GoogleUtils;
+import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import com.osanvalley.moamail.global.util.Uuid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -36,6 +40,7 @@ public class MemberService {
     private final MailRepository mailRepository;
     private final PasswordEncoder passwordEncoder;
     private final TwoWayEncryptService twoWayEncryptService;
+    private final GoogleUtils googleUtils;
 
     // 회원가입(일반)
     @Transactional
@@ -99,8 +104,34 @@ public class MemberService {
 
     // 회원가입 및 로그인(소셜)
     @Transactional
-    public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(SocialMemberRequestDto socialMemberRequestDto) {
-        RegisterType registerType = validateRegisterType(socialMemberRequestDto.getProvider());
+    public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(SocialAuthCodeDto socialAuthCodeDto) {
+        RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
+        SocialMemberRequestDto socialMemberRequestDto;
+
+        if (registerType.equals(RegisterType.NAVER)) {
+            // 재환 추가
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(null)
+                    .email(null)
+                    .profileImgUrl(null)
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(null)
+                    .build();
+        } else {
+            GoogleAccessTokenDto googleAccessTokenDto = googleUtils.getGoogleAccessToken(socialAuthCodeDto.getCode());
+            GoogleMemberInfoDto googleMemberInfoDto = googleUtils.getGoogleMemberInfo(googleAccessTokenDto.getAccess_token());
+
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(googleMemberInfoDto.getName())
+                    .email(googleMemberInfoDto.getEmail())
+                    .profileImgUrl(googleMemberInfoDto.getPicture())
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(googleMemberInfoDto.getId())
+                    .googleAccessToken(googleAccessTokenDto.getAccess_token())
+                    .googleRefreshToken(googleAccessTokenDto.getRefresh_token())
+                    .build();
+        }
+
         Optional<SocialMember> socialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialMemberRequestDto.getSocialId(), registerType);
 
         if (socialMember.isPresent()) {
@@ -114,7 +145,7 @@ public class MemberService {
 
             return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
         } else {
-            Social social = validateSocialType(socialMemberRequestDto.getProvider());
+            Social social = validateSocialType(socialAuthCodeDto.getProvider());
 
             Member member = MemberRequestDto.memberToEntity(registerType, socialMemberRequestDto);
             memberRepository.saveAndFlush(member);
