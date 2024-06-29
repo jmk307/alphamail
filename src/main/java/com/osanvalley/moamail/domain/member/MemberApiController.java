@@ -52,8 +52,8 @@ public class MemberApiController {
     @PostMapping("social/signupAndIn")
     @ApiOperation(value = "소셜 회원가입/로그인")
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(
-            @RequestBody SocialMemberRequestDto socialMemberRequestDto) {
-        return memberService.signUpAndInSocial(socialMemberRequestDto);
+            @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
+        return memberService.signUpAndInSocial(socialAuthCodeDto);
     }
 
     @GetMapping("social/check")

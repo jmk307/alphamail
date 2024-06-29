@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,52 @@ public class GoogleUtils {
 
     @Value("${google.clientSecret}")
     private String CLIENT_SECRET;
+
+    @Value("${google.redirectUri}")
+    private String REDIRECT_URI;
+
+    // 구글 정보 가져오기
+    @Transactional(readOnly = true)
+    public GoogleMemberInfoDto getGoogleMemberInfo(String accessToken) {
+        final String googleMemberInfoUrl = "https://www.googleapis.com/oauth2/v1/userinfo";
+
+        try {
+            return webClient.get()
+                .uri(googleMemberInfoUrl)
+                .header("Authorization", "Bearer " + accessToken)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(GoogleMemberInfoDto.class)
+            .block();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+        }
+    }
+
+    // 구글 어세스토큰 발급
+    @Transactional(readOnly = true)
+    public GoogleAccessTokenDto getGoogleAccessToken(String code) {
+        final String googleTokenUrl = "https://oauth2.googleapis.com/token";
+        GoogleAccessTokenDto googleAccessTokenDto;
+
+        System.out.println(REDIRECT_URI);
+
+        try {
+            googleAccessTokenDto = webClient.post()
+                .uri(googleTokenUrl)
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("code=" + code + "&client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "&grant_type=authorization_code")
+                .retrieve()
+                .bodyToMono(GoogleAccessTokenDto.class)
+            .block();
+
+            return googleAccessTokenDto;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
+        }
+    }
 
     @Transactional(readOnly = true)
     public GmailResponseDto showGmailMessage(String accessToken, String messageId) {

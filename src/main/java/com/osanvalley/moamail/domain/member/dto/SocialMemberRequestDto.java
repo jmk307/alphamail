@@ -4,10 +4,7 @@ import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.Social;
 
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -26,6 +23,17 @@ public class SocialMemberRequestDto {
     private String googleAccessToken;
 
     private String googleRefreshToken;
+
+    @Builder
+    public SocialMemberRequestDto(String nickname, String email, String profileImgUrl, String provider, String socialId, String googleAccessToken, String googleRefreshToken) {
+        this.nickname = nickname;
+        this.email = email;
+        this.profileImgUrl = profileImgUrl;
+        this.provider = provider;
+        this.socialId = socialId;
+        this.googleAccessToken = googleAccessToken;
+        this.googleRefreshToken = googleRefreshToken;
+    }
 
     public static SocialMember socialMemberToEntity(Social social, Member member, SocialMemberRequestDto socialMemberRequestDto) {
         return SocialMember.builder()
