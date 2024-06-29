@@ -140,7 +140,7 @@ public class MemberService {
     }
 
     // 소셜로그인 회원정보 세팅
-    public SocialMemberRequestDto setSocialMemberRequestDto(SocialAuthCodeDto socialAuthCodeDto, RegisterType registerType) {
+    private SocialMemberRequestDto setSocialMemberRequestDto(SocialAuthCodeDto socialAuthCodeDto, RegisterType registerType) {
         SocialMemberRequestDto socialMemberRequestDto;
 
         if (registerType.equals(RegisterType.NAVER)) {
