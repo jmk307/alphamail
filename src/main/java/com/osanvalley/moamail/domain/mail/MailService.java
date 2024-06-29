@@ -56,6 +56,7 @@ public class MailService {
         googleUtils.saveGmails(member, socialMember.getGoogleAccessToken(), null);
 
         // TODO : 기령 만든 AI 모델로 스팸 분류 기능 추가하기
+        System.out.println("test");
 
         return "메일 저장 완료";
     }
