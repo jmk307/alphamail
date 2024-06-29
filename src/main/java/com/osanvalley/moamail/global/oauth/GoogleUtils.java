@@ -84,7 +84,6 @@ public class GoogleUtils {
         final String googleTokenUrl = "https://oauth2.googleapis.com/token";
         GoogleAccessTokenDto googleAccessTokenDto;
 
-        System.out.println(REDIRECT_URI);
 
         try {
             googleAccessTokenDto = webClient.post()

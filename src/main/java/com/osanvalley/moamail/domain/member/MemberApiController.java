@@ -45,8 +45,8 @@ public class MemberApiController {
     @ApiOperation(value = "소셜 계정 연동")
     public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(
             @ApiIgnore @LoginUser Member member,
-            @Valid @RequestBody SocialMemberRequestDto socialMemberRequestDto) {
-        return ResponseEntity.ok(CommonApiResponse.of(memberService.linkSocialAccount(member, socialMemberRequestDto)));
+            @Valid @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
+        return ResponseEntity.ok(CommonApiResponse.of(memberService.linkSocialAccount(member, socialAuthCodeDto)));
     }
 
     @PostMapping("social/signupAndIn")
