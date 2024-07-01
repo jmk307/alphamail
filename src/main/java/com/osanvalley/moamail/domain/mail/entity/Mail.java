@@ -62,7 +62,7 @@ public class Mail extends BaseTimeEntity {
     private LocalDateTime sendDate;
 
     @Column(columnDefinition = "TINYINT(1)")
-    private boolean isSpam;
+    private Boolean isSpam;
 
     @Builder
     public Mail(Long id, SocialMember socialMember, Social social, String title, String alias, String fromEmail,

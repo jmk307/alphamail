@@ -49,8 +49,8 @@ public class PageDto {
 
         int pageNumber = mails.getPageable().getPageNumber() + 1;
         int totalPage = mails.getTotalPages();
-        int startNumber = (int)((Math.floor((double) pageNumber / 10) * 10) + 1 <= totalPage ? (Math.floor((double) pageNumber / 10) * 10) + 1 : totalPage);
-        int endNumber = (Math.min(startNumber + 10 - 1, totalPage));
+        int startNumber = (int)(((pageNumber - 1) / 10) * 10 + 1);
+        int endNumber = Math.min(startNumber + 9, totalPage);
         boolean hasPrev = mails.hasPrevious();
         boolean hasNext = mails.hasNext();
         List<Integer> pageList = IntStream.rangeClosed(startNumber, endNumber)

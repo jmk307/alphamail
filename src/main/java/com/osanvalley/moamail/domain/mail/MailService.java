@@ -1,6 +1,7 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.global.imap.NaverUtils;
 import com.osanvalley.moamail.global.imap.NaverImapMailConnector;
@@ -16,6 +17,7 @@ import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +43,7 @@ public class MailService {
     private final MailBatchRepository mailBatchRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final TwoWayEncryptService twoWayEncryptService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     // 메일 저장하기(Gmail) -> 지민
     @Transactional
@@ -55,8 +58,11 @@ public class MailService {
 
         googleUtils.saveGmails(member, socialMember.getGoogleAccessToken(), null);
 
-        // TODO : 기령 만든 AI 모델로 스팸 분류 기능 추가하기
-        System.out.println("test");
+        int[] mailIds = mailRepository.findAllBySocialMember_Member(member).stream()
+                .map(Mail::getId)
+                .mapToInt(Long::intValue).toArray();
+
+        applicationEventPublisher.publishEvent(new MailEvent(mailIds));
 
         return "메일 저장 완료";
     }
