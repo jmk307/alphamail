@@ -48,15 +48,15 @@ public class MemberRequestDto {
     @NotNull
     private Sex sex;
 
-    public static Member memberToEntity(String password, MemberRequestDto memberReqeustDto) {
+    public static Member memberToEntity(String password, MemberRequestDto memberRequestDto) {
         return Member.builder()
-                .authId(memberReqeustDto.getAuthId())
+                .authId(memberRequestDto.getAuthId())
                 .password(password)
-                .phoneNumber(memberReqeustDto.getPhoneNumber())
-                .nickname(memberReqeustDto.getNickname())
-                .birth(memberReqeustDto.getBirth())
+                .phoneNumber(memberRequestDto.getPhoneNumber())
+                .nickname(memberRequestDto.getNickname())
+                .birth(memberRequestDto.getBirth())
                 .registerType(RegisterType.COMMON)
-                .sex(memberReqeustDto.getSex())
+                .sex(memberRequestDto.getSex())
         .build();
     }
 

@@ -106,31 +106,7 @@ public class MemberService {
     @Transactional
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(SocialAuthCodeDto socialAuthCodeDto) {
         RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
-        SocialMemberRequestDto socialMemberRequestDto;
-
-        if (registerType.equals(RegisterType.NAVER)) {
-            // 재환 추가
-            socialMemberRequestDto = SocialMemberRequestDto.builder()
-                    .nickname(null)
-                    .email(null)
-                    .profileImgUrl(null)
-                    .provider(socialAuthCodeDto.getProvider())
-                    .socialId(null)
-                    .build();
-        } else {
-            GoogleAccessTokenDto googleAccessTokenDto = googleUtils.getGoogleAccessToken(socialAuthCodeDto.getCode());
-            GoogleMemberInfoDto googleMemberInfoDto = googleUtils.getGoogleMemberInfo(googleAccessTokenDto.getAccess_token());
-
-            socialMemberRequestDto = SocialMemberRequestDto.builder()
-                    .nickname(googleMemberInfoDto.getName())
-                    .email(googleMemberInfoDto.getEmail())
-                    .profileImgUrl(googleMemberInfoDto.getPicture())
-                    .provider(socialAuthCodeDto.getProvider())
-                    .socialId(googleMemberInfoDto.getId())
-                    .googleAccessToken(googleAccessTokenDto.getAccess_token())
-                    .googleRefreshToken(googleAccessTokenDto.getRefresh_token())
-                    .build();
-        }
+        SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
 
         Optional<SocialMember> socialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialMemberRequestDto.getSocialId(), registerType);
 
@@ -163,6 +139,36 @@ public class MemberService {
         }
     }
 
+    // 소셜로그인 회원정보 세팅
+    private SocialMemberRequestDto setSocialMemberRequestDto(SocialAuthCodeDto socialAuthCodeDto, RegisterType registerType) {
+        SocialMemberRequestDto socialMemberRequestDto;
+
+        if (registerType.equals(RegisterType.NAVER)) {
+            // 재환 추가
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(null)
+                    .email(null)
+                    .profileImgUrl(null)
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(null)
+                    .build();
+        } else {
+            GoogleAccessTokenDto googleAccessTokenDto = googleUtils.getGoogleAccessToken(socialAuthCodeDto.getCode());
+            GoogleMemberInfoDto googleMemberInfoDto = googleUtils.getGoogleMemberInfo(googleAccessTokenDto.getAccess_token());
+
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(googleMemberInfoDto.getName())
+                    .email(googleMemberInfoDto.getEmail())
+                    .profileImgUrl(googleMemberInfoDto.getPicture())
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(googleMemberInfoDto.getId())
+                    .googleAccessToken(googleAccessTokenDto.getAccess_token())
+                    .googleRefreshToken(googleAccessTokenDto.getRefresh_token())
+                    .build();
+        }
+        return socialMemberRequestDto;
+    }
+
     // 회원가입 소셜 판별
     public RegisterType validateRegisterType(String provider) {
         return provider.equals("google")
@@ -179,10 +185,19 @@ public class MemberService {
 
     // 소셜계정 연동
     @Transactional
-    public String linkSocialAccount(Member member, SocialMemberRequestDto socialMemberRequestDto) {
-        Social social = validateSocialType(socialMemberRequestDto.getProvider());
-        SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
-        socialMemberRepository.save(socialMember);
+    public String linkSocialAccount(Member member, SocialAuthCodeDto socialAuthCodeDto) {
+        Social social = validateSocialType(socialAuthCodeDto.getProvider());
+        RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
+        SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
+
+        Optional<SocialMember> checkSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialMemberRequestDto.getSocialId(), registerType);
+
+        if (checkSocialMember.isPresent()) {
+            return social.name() + " 계정 연동 완료";
+        } else {
+            SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
+            socialMemberRepository.save(socialMember);
+        }
 
         return social.name() + " 계정 연동 완료";
     }
