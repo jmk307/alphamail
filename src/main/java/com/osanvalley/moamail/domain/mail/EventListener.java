@@ -16,6 +16,15 @@ public class EventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAfterCommitMailsSaved(MailEvent mailEvent) throws JsonProcessingException {
-        sqsService.sendMessage(new MessageDto(mailEvent.getMailIds()));
+        int[] mailIds = mailEvent.getMailIds();
+
+        for (int i = 0; i < mailIds.length; i += 10) {
+            int end = Math.min(mailIds.length, i + 10);
+
+            int[] chunk = new int[end - i];
+            System.arraycopy(mailIds, i, chunk, 0, end - i);
+
+            sqsService.sendMessage(new MessageDto(chunk));
+        }
     }
 }
