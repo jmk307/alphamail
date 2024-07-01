@@ -10,4 +10,8 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MessageDto {
     private int[] email_id;
+
+    public MessageDto(int[] email_id) {
+        this.email_id = email_id;
+    }
 }

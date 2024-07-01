@@ -79,7 +79,6 @@ public class GoogleUtils {
     }
 
     // 구글 어세스토큰 발급
-    @Transactional(readOnly = true)
     public GoogleAccessTokenDto getGoogleAccessToken(String code) {
         final String googleTokenUrl = "https://oauth2.googleapis.com/token";
         GoogleAccessTokenDto googleAccessTokenDto;

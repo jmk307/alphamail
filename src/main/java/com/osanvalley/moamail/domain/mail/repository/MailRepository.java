@@ -12,6 +12,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface MailRepository extends JpaRepository<Mail, Long> {
+    List<Mail> findAllBySocialMember_Member(Member member);
+
     Page<Mail> findAllBySocialMember_Member(Member member, Pageable pageable);
 
     Page<Mail> findAllBySocialMember_MemberAndFromEmailIn(Member member, List<String> fromEmails, Pageable pageable);
