@@ -89,6 +89,7 @@ public class GoogleUtils {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .bodyValue("code=" + code + "&client_id=" + CLIENT_ID + "&client_secret=" + CLIENT_SECRET + "&redirect_uri=" + REDIRECT_URI + "&grant_type=authorization_code")
                 .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, response -> response.bodyToMono(String.class).map(Exception::new))
                 .bodyToMono(GoogleAccessTokenDto.class)
             .block();
 
