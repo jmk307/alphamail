@@ -63,8 +63,8 @@ public class MailService {
 
         SocialMember socialMember;
 
-        if (socialMemberRepository.existsBySocialId(socialMemberRequestDto.getSocialId())) {
-            socialMember = socialMemberRepository.findBySocialId(socialMemberRequestDto.getSocialId())
+        if (socialMemberRepository.existsBySocialIdAndMember(socialMemberRequestDto.getSocialId(), member)) {
+            socialMember = socialMemberRepository.findBySocialIdAndMember(socialMemberRequestDto.getSocialId(), member)
                     .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
         } else {
             socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
