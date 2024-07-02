@@ -53,6 +53,7 @@ public enum ErrorCode {
     KAKAO_BAD_REQUEST(BAD_REQUEST, "AUTH018", "카카오 회원가입에 실패했습니다."),
     GOOGLE_BAD_REQUEST(BAD_REQUEST, "AUTH019", "구글 회원가입에 실패했습니다."),
     APPLE_BAD_REQUEST(BAD_REQUEST, "AUTH020", "애플 회원가입에 실패했습니다."),
+    SOCIAL_MEMBER_ALREADY_EXISTS(BAD_REQUEST, "AUTH021", "이미 연동된 소셜 계정입니다"),
 
     /* 이미지 관련 오류 */
     INVALID_FILE_EXTENSION(BAD_REQUEST, "FILE000", "잘못된 파일 확장자명입니다"),
