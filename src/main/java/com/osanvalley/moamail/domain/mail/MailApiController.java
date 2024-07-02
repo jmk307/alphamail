@@ -1,6 +1,7 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
+import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +25,11 @@ public class MailApiController {
     private final MailService mailService;
 
     @PostMapping("google")
-    @ApiOperation(value = "Gmail 메일 저장하기")
-    public ResponseEntity<CommonApiResponse<String>> saveGmails(
-            @ApiIgnore @LoginUser Member member) {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(member)));
+    @ApiOperation(value = "구글 계정 연동 및 Gmail 메일 저장하기")
+    public ResponseEntity<CommonApiResponse<String>> linkGoogleAndsaveGmails(
+            @ApiIgnore @LoginUser Member member,
+            @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.linkGoogleAndSaveGmails(member, socialAuthCodeDto)));
     }
 
     @PostMapping("naver")
