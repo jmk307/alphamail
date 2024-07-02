@@ -76,7 +76,7 @@ public class MailService {
             googleUtils.reissueGoogleAccessToken(member);
         }
 
-        googleUtils.saveGmails(member, socialMember.getGoogleAccessToken(), null);
+        googleUtils.saveGmails(socialMember, null);
 
         int[] mailIds = mailRepository.findAllBySocialMember_Member(member).stream()
                 .map(Mail::getId)
