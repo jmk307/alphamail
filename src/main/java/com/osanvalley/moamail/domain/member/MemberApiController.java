@@ -41,14 +41,6 @@ public class MemberApiController {
         return memberService.signInCommon(loginDto);
     }
 
-    @PostMapping("common/linkSocialAccount")
-    @ApiOperation(value = "소셜 계정 연동")
-    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(
-            @ApiIgnore @LoginUser Member member,
-            @Valid @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
-        return ResponseEntity.ok(CommonApiResponse.of(memberService.linkSocialAccount(member, socialAuthCodeDto)));
-    }
-
     @PostMapping("social/signupAndIn")
     @ApiOperation(value = "소셜 회원가입/로그인")
     public ResponseEntity<CommonApiResponse<MemberResponseDto>> signUpAndInSocial(
@@ -63,8 +55,16 @@ public class MemberApiController {
         return ResponseEntity.ok(CommonApiResponse.of(memberService.checkSocial(member)));
     }
 
-    @PostMapping("social/setImapAccount")
-    @ApiOperation(value = "로그인한 유저의 IMAP 계정 셋팅(NAVER)")
+    @PostMapping("social/google")
+    @ApiOperation(value = "소셜 계정 연동(구글)")
+    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(
+            @ApiIgnore @LoginUser Member member,
+            @Valid @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
+        return ResponseEntity.ok(CommonApiResponse.of(memberService.linkSocialAccount(member, socialAuthCodeDto)));
+    }
+
+    @PostMapping("social/naver")
+    @ApiOperation(value = "소셜 계정 연동(네이버)")
     public ResponseEntity<CommonApiResponse<String>> setImapAccount(
             @ApiIgnore @LoginUser Member member,
             @RequestBody ImapAccountRequestDto imapAccountRequestDto) {
