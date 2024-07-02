@@ -37,6 +37,7 @@ import javax.mail.UIDFolder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.osanvalley.moamail.domain.member.MemberService.validateRegisterType;
@@ -60,12 +61,15 @@ public class MailService {
         RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
         SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
 
-        if (socialMemberRepository.existsBySocialId(socialMemberRequestDto.getSocialId())) {
-            throw new BadRequestException(ErrorCode.MEMBER_ALREADY_EXIST);
-        }
+        SocialMember socialMember;
 
-        SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
-        socialMemberRepository.saveAndFlush(socialMember);
+        if (socialMemberRepository.existsBySocialId(socialMemberRequestDto.getSocialId())) {
+            socialMember = socialMemberRepository.findBySocialId(socialMemberRequestDto.getSocialId())
+                    .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+        } else {
+            socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
+            socialMemberRepository.saveAndFlush(socialMember);
+        }
 
         // 구글 어세스토큰 유효성검사
         if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {

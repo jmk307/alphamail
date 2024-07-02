@@ -13,4 +13,6 @@ public interface SocialMemberRepository extends JpaRepository<SocialMember, Long
 
     Optional<SocialMember> findByMember_AuthIdAndEmail(String authId, String email);
     boolean existsBySocialId(String socialId);
+
+    Optional<SocialMember> findBySocialId(String socialId);
 }
