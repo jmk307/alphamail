@@ -18,7 +18,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@Api(tags = "mail API")
+@Api(tags = "Mail API")
 @RequestMapping("api/mails")
 public class MailApiController {
     private final MailService mailService;
@@ -28,6 +28,13 @@ public class MailApiController {
     public ResponseEntity<CommonApiResponse<String>> saveGmails(
             @ApiIgnore @LoginUser Member member) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.saveGmails(member)));
+    }
+
+    @PostMapping("naver")
+    @ApiOperation(value = "네이버 메일 저장하기")
+    public ResponseEntity<CommonApiResponse<String>> saveNaverMails(
+            @ApiIgnore @LoginUser Member member) throws MessagingException, IOException {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveNaverMails(member)));
     }
 
     @GetMapping
@@ -52,12 +59,5 @@ public class MailApiController {
             @ApiIgnore @LoginUser Member member,
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showSentMails(member, pageNumber)));
-    }
-
-    @PostMapping("naver")
-    @ApiOperation(value = "NAVER 메일 저장하기")
-    public ResponseEntity<CommonApiResponse<String>> saveNaverMails(
-            @ApiIgnore @LoginUser Member member) throws MessagingException, IOException {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.saveNaverMails(member)));
     }
 }

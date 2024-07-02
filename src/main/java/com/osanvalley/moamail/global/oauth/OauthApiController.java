@@ -20,7 +20,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @RequiredArgsConstructor
 @Api(tags = "OAUTH API 테스트")
 @RequestMapping("api/oauth")
-// @ApiIgnore
+@ApiIgnore
 public class OauthApiController {
     private final GoogleUtils googleUtils;
 
