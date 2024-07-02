@@ -1,5 +1,6 @@
 package com.osanvalley.moamail.domain.member.repository;
 
+import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import com.osanvalley.moamail.domain.member.model.RegisterType;
 import com.osanvalley.moamail.domain.member.model.Social;
@@ -12,7 +13,7 @@ public interface SocialMemberRepository extends JpaRepository<SocialMember, Long
     Optional<SocialMember> findByMember_AuthIdAndSocial(String authId, Social social);
 
     Optional<SocialMember> findByMember_AuthIdAndEmail(String authId, String email);
-    boolean existsBySocialId(String socialId);
+    boolean existsBySocialIdAndMember(String socialId, Member member);
 
-    Optional<SocialMember> findBySocialId(String socialId);
+    Optional<SocialMember> findBySocialIdAndMember(String socialId, Member member);
 }
