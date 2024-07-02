@@ -64,8 +64,7 @@ public class MailService {
         SocialMember socialMember;
 
         if (socialMemberRepository.existsBySocialIdAndMember(socialMemberRequestDto.getSocialId(), member)) {
-            socialMember = socialMemberRepository.findBySocialIdAndMember(socialMemberRequestDto.getSocialId(), member)
-                    .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+            throw new BadRequestException(ErrorCode.SOCIAL_MEMBER_ALREADY_EXISTS);
         } else {
             socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
             socialMemberRepository.saveAndFlush(socialMember);
