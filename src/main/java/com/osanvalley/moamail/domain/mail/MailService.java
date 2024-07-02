@@ -62,6 +62,7 @@ public class MailService {
                 .map(Mail::getId)
                 .mapToInt(Long::intValue).toArray();
 
+        // 스팸처리할 메일id들 -> sqs
         applicationEventPublisher.publishEvent(new MailEvent(mailIds));
 
         return "메일 저장 완료";

@@ -44,7 +44,6 @@ public class SocialMember extends BaseTimeEntity {
     @OneToMany(mappedBy = "socialMember", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Mail> mails = new ArrayList<>();
 
-    @NotNull
     private Long lastStoredMsgUID;
 
     @Builder
