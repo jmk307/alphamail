@@ -55,14 +55,6 @@ public class MemberApiController {
         return ResponseEntity.ok(CommonApiResponse.of(memberService.checkSocial(member)));
     }
 
-    @PostMapping("social/google")
-    @ApiOperation(value = "소셜 계정 연동(구글)")
-    public ResponseEntity<CommonApiResponse<String>> linkSocialAccount(
-            @ApiIgnore @LoginUser Member member,
-            @Valid @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
-        return ResponseEntity.ok(CommonApiResponse.of(memberService.linkSocialAccount(member, socialAuthCodeDto)));
-    }
-
     @PostMapping("social/naver")
     @ApiOperation(value = "소셜 계정 연동(네이버)")
     public ResponseEntity<CommonApiResponse<String>> setImapAccount(

@@ -3,6 +3,9 @@ package com.osanvalley.moamail.domain.mail;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
+import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
+import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
+import com.osanvalley.moamail.domain.member.model.RegisterType;
 import com.osanvalley.moamail.global.imap.NaverUtils;
 import com.osanvalley.moamail.global.imap.NaverImapMailConnector;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
@@ -16,6 +19,8 @@ import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptServic
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
+import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
+import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
@@ -34,6 +39,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.osanvalley.moamail.domain.member.MemberService.validateRegisterType;
+import static com.osanvalley.moamail.domain.member.MemberService.validateSocialType;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -45,11 +53,19 @@ public class MailService {
     private final TwoWayEncryptService twoWayEncryptService;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    // 메일 저장하기(Gmail) -> 지민
+    // 소셜 계정 연동 및 메일 저장(Gmail) -> 지민
     @Transactional
-    public String saveGmails(Member member) {
-        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
-                .orElseThrow(() -> new IllegalArgumentException("구글 계정이 없습니다."));
+    public String linkGoogleAndSaveGmails(Member member, SocialAuthCodeDto socialAuthCodeDto) {
+        Social social = validateSocialType(socialAuthCodeDto.getProvider());
+        RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
+        SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
+
+        if (socialMemberRepository.existsBySocialId(socialMemberRequestDto.getSocialId())) {
+            throw new BadRequestException(ErrorCode.MEMBER_ALREADY_EXIST);
+        }
+
+        SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
+        socialMemberRepository.saveAndFlush(socialMember);
 
         // 구글 어세스토큰 유효성검사
         if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {
@@ -66,6 +82,36 @@ public class MailService {
         applicationEventPublisher.publishEvent(new MailEvent(mailIds));
 
         return "메일 저장 완료";
+    }
+
+    // 소셜로그인 회원정보 세팅
+    private SocialMemberRequestDto setSocialMemberRequestDto(SocialAuthCodeDto socialAuthCodeDto, RegisterType registerType) {
+        SocialMemberRequestDto socialMemberRequestDto;
+
+        if (registerType.equals(RegisterType.NAVER)) {
+            // 재환 추가
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(null)
+                    .email(null)
+                    .profileImgUrl(null)
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(null)
+                    .build();
+        } else {
+            GoogleAccessTokenDto googleAccessTokenDto = googleUtils.getGoogleAccessToken(socialAuthCodeDto.getCode());
+            GoogleMemberInfoDto googleMemberInfoDto = googleUtils.getGoogleMemberInfo(googleAccessTokenDto.getAccess_token());
+
+            socialMemberRequestDto = SocialMemberRequestDto.builder()
+                    .nickname(googleMemberInfoDto.getName())
+                    .email(googleMemberInfoDto.getEmail())
+                    .profileImgUrl(googleMemberInfoDto.getPicture())
+                    .provider(socialAuthCodeDto.getProvider())
+                    .socialId(googleMemberInfoDto.getId())
+                    .googleAccessToken(googleAccessTokenDto.getAccess_token())
+                    .googleRefreshToken(googleAccessTokenDto.getRefresh_token())
+                    .build();
+        }
+        return socialMemberRequestDto;
     }
 
     @Transactional(readOnly = true)

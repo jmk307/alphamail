@@ -170,36 +170,17 @@ public class MemberService {
     }
 
     // 회원가입 소셜 판별
-    public RegisterType validateRegisterType(String provider) {
+    public static RegisterType validateRegisterType(String provider) {
         return provider.equals("google")
                 ? RegisterType.GOOGLE
                 : RegisterType.NAVER;
     }
 
     // 등록 소셜 판별
-    public Social validateSocialType(String provider) {
+    public static Social validateSocialType(String provider) {
         return provider.equals("google")
                 ? Social.GOOGLE
                 : Social.NAVER;
-    }
-
-    // 소셜계정 연동
-    @Transactional
-    public String linkSocialAccount(Member member, SocialAuthCodeDto socialAuthCodeDto) {
-        Social social = validateSocialType(socialAuthCodeDto.getProvider());
-        RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
-        SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
-
-        Optional<SocialMember> checkSocialMember = socialMemberRepository.findBySocialIdAndMember_RegisterType(socialMemberRequestDto.getSocialId(), registerType);
-
-        if (checkSocialMember.isPresent()) {
-            return social.name() + " 계정 연동 완료";
-        } else {
-            SocialMember socialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
-            socialMemberRepository.save(socialMember);
-        }
-
-        return social.name() + " 계정 연동 완료";
     }
 
     // 유저 메일 존재여부
