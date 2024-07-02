@@ -110,17 +110,14 @@ public class GoogleUtils {
         return getGmailMessages(accessToken, nextPageToken);
     }
 
-    public String saveGmails(Member member, String accessToken, String nextPageToken) {
-        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndSocial(member.getAuthId(), Social.GOOGLE)
-                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
-
+    public String saveGmails(SocialMember socialMember, String nextPageToken) {
         long beforeTime = System.currentTimeMillis();
         String pageToken = nextPageToken;
         int count = 0;
         while (true) {
             System.out.println(pageToken);
             
-            GmailListResponseDto gmailList = getGmailMessages(accessToken, pageToken);
+            GmailListResponseDto gmailList = getGmailMessages(socialMember.getGoogleAccessToken(), pageToken);
             if (gmailList == null) {
                 break;
             }
@@ -138,11 +135,11 @@ public class GoogleUtils {
                     int end = Math.min(i + 20, messageIds.size());
 
                     List<String> subMessageIds = messageIds.subList(start, end);
-                    gmails.addAll(fluxReadGmails(subMessageIds, accessToken, socialMember));
+                    gmails.addAll(fluxReadGmails(subMessageIds, socialMember.getGoogleAccessToken(), socialMember));
                 }
             } else {
                 // 각 이메일 ID에 대한 병렬 요청 생성
-                gmails.addAll(fluxReadGmails(messageIds, accessToken, socialMember));
+                gmails.addAll(fluxReadGmails(messageIds, socialMember.getGoogleAccessToken(), socialMember));
             }
 
             batchSaveGmails(socialMember, gmails);
