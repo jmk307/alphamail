@@ -57,8 +57,6 @@ public class MailService {
     // 소셜 계정 연동 및 메일 저장(Gmail) -> 지민
     @Transactional
     public String linkGoogleAndSaveGmails(Member member, SocialAuthCodeDto socialAuthCodeDto) {
-        long beforeTime = System.currentTimeMillis();
-
         Social social = validateSocialType(socialAuthCodeDto.getProvider());
         RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
         SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
@@ -81,10 +79,6 @@ public class MailService {
 
         // 스팸처리할 메일id들 -> sqs
         applicationEventPublisher.publishEvent(new MailEvent(member, socialMember, nextPageToken));
-
-        long afterTime = System.currentTimeMillis();
-        long secDiffTime = (afterTime - beforeTime) / 1000;
-        System.out.println("시간차이(m) : " + secDiffTime);
 
         return "메일 저장 완료";
     }
@@ -122,7 +116,7 @@ public class MailService {
     @Transactional(readOnly = true)
     public PageDto showAllMails(Member member, int pageNumber) {
         // 전체메일 보기 -> 지민(완)
-        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
+        Pageable pageable = PageRequest.of(pageNumber - 1, 50, Sort.by(Sort.Direction.DESC, "sendDate"));
         Page<Mail> mails = mailRepository.findAllBySocialMember_Member(member, pageable);
 
         return PageDto.of(mails);
@@ -131,7 +125,7 @@ public class MailService {
     // 받은메일함 보기 -> 지민(완)
     @Transactional(readOnly = true)
     public PageDto showReceivedMails(Member member, int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
+        Pageable pageable = PageRequest.of(pageNumber - 1, 50, Sort.by(Sort.Direction.DESC, "sendDate"));
 
         List<String> memberEmails = member.getSocialMembers().stream()
                 .map(SocialMember::getEmail)
@@ -144,7 +138,7 @@ public class MailService {
     // 보낸메일함 보기 -> 지민(완)
     @Transactional(readOnly = true)
     public PageDto showSentMails(Member member, int pageNumber) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, 20, Sort.by(Sort.Direction.DESC, "sendDate"));
+        Pageable pageable = PageRequest.of(pageNumber - 1, 50, Sort.by(Sort.Direction.DESC, "sendDate"));
 
         List<String> memberEmails = member.getSocialMembers().stream()
                 .map(SocialMember::getEmail)
