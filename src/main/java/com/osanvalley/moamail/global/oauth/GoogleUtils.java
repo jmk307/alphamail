@@ -200,7 +200,7 @@ public class GoogleUtils {
             batchSaveGmails(socialMember, gmails);
 
             pageToken = gmailList.getNextPageToken();
-            if (count <= 900 || pageToken == null) {
+            if (count >= 900 || pageToken == null) {
                 break;
             }
 

@@ -57,6 +57,8 @@ public class MailService {
     // 소셜 계정 연동 및 메일 저장(Gmail) -> 지민
     @Transactional
     public String linkGoogleAndSaveGmails(Member member, SocialAuthCodeDto socialAuthCodeDto) {
+        long beforeTime = System.currentTimeMillis();
+
         Social social = validateSocialType(socialAuthCodeDto.getProvider());
         RegisterType registerType = validateRegisterType(socialAuthCodeDto.getProvider());
         SocialMemberRequestDto socialMemberRequestDto = setSocialMemberRequestDto(socialAuthCodeDto, registerType);
@@ -86,6 +88,10 @@ public class MailService {
         applicationEventPublisher.publishEvent(new MailEvent(mailIds));
 
         googleUtils.saveRemainingGmails(socialMember, nextPageToken);
+
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime) / 1000;
+        System.out.println("시간차이(m) : " + secDiffTime);
 
         return "메일 저장 완료";
     }
