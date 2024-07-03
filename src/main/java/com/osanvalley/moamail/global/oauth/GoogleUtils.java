@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -14,10 +15,13 @@ import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
 import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -45,6 +49,7 @@ import reactor.core.scheduler.Schedulers;
 @Component
 @RequiredArgsConstructor
 public class GoogleUtils {
+    private static final Logger log = LoggerFactory.getLogger(GoogleUtils.class);
     private final MailRepository mailRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final MailBatchRepository mailBatchRepository;
@@ -107,6 +112,9 @@ public class GoogleUtils {
 
     @Transactional(readOnly = true)
     public GmailListResponseDto showGmailMessages(String accessToken, String nextPageToken) {
+        GmailListResponseDto gmailListResponseDto = getGmailMessages(accessToken, nextPageToken);
+        log.info(String.valueOf(gmailListResponseDto.getMessages().size()));
+
         return getGmailMessages(accessToken, nextPageToken);
     }
 
@@ -115,8 +123,6 @@ public class GoogleUtils {
         String pageToken = nextPageToken;
         int count = 0;
         while (true) {
-            System.out.println(pageToken);
-            
             GmailListResponseDto gmailList = getGmailMessages(socialMember.getGoogleAccessToken(), pageToken);
             if (gmailList == null) {
                 break;
@@ -145,7 +151,7 @@ public class GoogleUtils {
             batchSaveGmails(socialMember, gmails);
 
             pageToken = gmailList.getNextPageToken();
-            if (count == 1000 || pageToken == null) {
+            if (count <= 100 || pageToken == null) {
                 break;
             }
 
@@ -157,7 +163,56 @@ public class GoogleUtils {
         long secDiffTime = (afterTime - beforeTime) / 1000;
         System.out.println("시간차이(m) : " + secDiffTime);
 
-        return "성공..!!";
+        return pageToken;
+    }
+
+    @Async("mail")
+    public CompletableFuture<Void> saveRemainingGmails(SocialMember socialMember, String nextPageToken) {
+        long beforeTime = System.currentTimeMillis();
+        String pageToken = nextPageToken;
+        int count = 0;
+        while (true) {
+            GmailListResponseDto gmailList = getGmailMessages(socialMember.getGoogleAccessToken(), pageToken);
+            if (gmailList == null) {
+                break;
+            }
+
+            List<String> messageIds = gmailList.messages.stream()
+                    .map(Message::getId)
+                    .collect(Collectors.toList());
+            count += messageIds.size();
+
+            List<GmailResponseDto> gmails = new ArrayList<>();
+
+            if (messageIds.size() == 100) {
+                for (int i = 0; i < messageIds.size(); i += 20) {
+                    int start = i;
+                    int end = Math.min(i + 20, messageIds.size());
+
+                    List<String> subMessageIds = messageIds.subList(start, end);
+                    gmails.addAll(fluxReadGmails(subMessageIds, socialMember.getGoogleAccessToken(), socialMember));
+                }
+            } else {
+                // 각 이메일 ID에 대한 병렬 요청 생성
+                gmails.addAll(fluxReadGmails(messageIds, socialMember.getGoogleAccessToken(), socialMember));
+            }
+
+            batchSaveGmails(socialMember, gmails);
+
+            pageToken = gmailList.getNextPageToken();
+            if (count <= 900 || pageToken == null) {
+                break;
+            }
+
+            System.out.println("메일 bulk insert 성공...!");
+            System.out.println(count);
+        }
+
+        long afterTime = System.currentTimeMillis();
+        long secDiffTime = (afterTime - beforeTime) / 1000;
+        System.out.println("시간차이(m) : " + secDiffTime);
+
+        return CompletableFuture.completedFuture(null);
     }
 
     public List<GmailResponseDto> fluxReadGmails(List<String> messageIds, String accessToken, SocialMember socialMember) {

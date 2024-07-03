@@ -75,14 +75,17 @@ public class MailService {
             googleUtils.reissueGoogleAccessToken(member);
         }
 
-        googleUtils.saveGmails(socialMember, null);
+        String nextPageToken = googleUtils.saveGmails(socialMember, null);
 
         int[] mailIds = mailRepository.findAllBySocialMember_Member(member).stream()
                 .map(Mail::getId)
                 .mapToInt(Long::intValue).toArray();
+        System.out.println(mailIds.length);
 
         // 스팸처리할 메일id들 -> sqs
         applicationEventPublisher.publishEvent(new MailEvent(mailIds));
+
+        googleUtils.saveRemainingGmails(socialMember, nextPageToken);
 
         return "메일 저장 완료";
     }
