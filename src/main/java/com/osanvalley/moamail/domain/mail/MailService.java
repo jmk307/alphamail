@@ -23,10 +23,7 @@ import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
 import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -149,6 +146,24 @@ public class MailService {
     }
 
     // 내게쓴메일함 보기
+    @Transactional(readOnly = true)
+    public PageDto showMailsSentByMe(Member member, int pageNumber) {
+        Pageable pageable = PageRequest.of(pageNumber - 1, 50, Sort.by(Sort.Direction.DESC, "sendDate"));
+
+        List<String> memberEmails = member.getSocialMembers().stream()
+                .map(SocialMember::getEmail)
+                .collect(Collectors.toList());
+
+        List<Mail> mergedMails = new ArrayList<>();
+        for (String email : memberEmails) {
+            List<Mail> mails = mailRepository.findAllByFromEmailAndToEmailReceiversContaining(email, email);
+            mergedMails.addAll(mails);
+        }
+
+        Page<Mail> mails = new PageImpl<>(mergedMails, pageable, mergedMails.size());
+
+        return PageDto.of(mails);
+    }
 
 
     // 스팸메일함 보기
