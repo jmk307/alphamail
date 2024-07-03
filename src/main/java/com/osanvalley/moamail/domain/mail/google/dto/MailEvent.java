@@ -1,12 +1,20 @@
 package com.osanvalley.moamail.domain.mail.google.dto;
 
+import com.osanvalley.moamail.domain.member.entity.Member;
+import com.osanvalley.moamail.domain.member.entity.SocialMember;
 import lombok.Getter;
 
 @Getter
 public class MailEvent {
-    private int[] mailIds;
+    private Member member;
 
-    public MailEvent(int[] mailIds) {
-        this.mailIds = mailIds;
+    private SocialMember socialMember;
+
+    private String nextPageToken;
+
+    public MailEvent(Member member, SocialMember socialMember, String nextPageToken) {
+        this.member = member;
+        this.socialMember = socialMember;
+        this.nextPageToken = nextPageToken;
     }
 }
