@@ -79,15 +79,8 @@ public class MailService {
 
         String nextPageToken = googleUtils.saveGmails(socialMember, null);
 
-        int[] mailIds = mailRepository.findAllBySocialMember_Member(member).stream()
-                .map(Mail::getId)
-                .mapToInt(Long::intValue).toArray();
-        System.out.println(mailIds.length);
-
         // 스팸처리할 메일id들 -> sqs
-        applicationEventPublisher.publishEvent(new MailEvent(mailIds));
-
-        googleUtils.saveRemainingGmails(socialMember, nextPageToken);
+        applicationEventPublisher.publishEvent(new MailEvent(member, socialMember, nextPageToken));
 
         long afterTime = System.currentTimeMillis();
         long secDiffTime = (afterTime - beforeTime) / 1000;
