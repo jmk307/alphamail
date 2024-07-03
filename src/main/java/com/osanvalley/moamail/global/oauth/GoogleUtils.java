@@ -113,7 +113,6 @@ public class GoogleUtils {
     @Transactional(readOnly = true)
     public GmailListResponseDto showGmailMessages(String accessToken, String nextPageToken) {
         GmailListResponseDto gmailListResponseDto = getGmailMessages(accessToken, nextPageToken);
-        log.info(String.valueOf(gmailListResponseDto.getMessages().size()));
 
         return getGmailMessages(accessToken, nextPageToken);
     }
@@ -282,6 +281,8 @@ public class GoogleUtils {
         
         mailBatchRepository.saveAll(mails);
     }
+
+
 
     public Readable filterHasRead(List<String> labelIds) {
         return labelIds.contains("UNREAD")

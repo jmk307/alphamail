@@ -62,4 +62,12 @@ public class MailApiController {
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showSentMails(member, pageNumber)));
     }
+
+    @GetMapping("me")
+    @ApiOperation(value = "내게 쓴 메일함 읽기")
+    public ResponseEntity<CommonApiResponse<PageDto>> showMailsSentByMe(
+            @ApiIgnore @LoginUser Member member,
+            @RequestParam int pageNumber) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.showMailsSentByMe(member, pageNumber)));
+    }
 }

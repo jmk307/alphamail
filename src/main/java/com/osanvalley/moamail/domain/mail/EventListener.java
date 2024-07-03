@@ -27,7 +27,9 @@ public class EventListener {
 
         sendMailIdsToSQSEachly(mailIds);
 
-        googleUtils.saveRemainingGmails(mailEvent.getSocialMember(), mailEvent.getNextPageToken());
+        if (mailEvent.getNextPageToken() != null) {
+            googleUtils.saveRemainingGmails(mailEvent.getSocialMember(), mailEvent.getNextPageToken());
+        }
     }
 
     private void sendMailIdsToSQSEachly(int[] mailIds) throws JsonProcessingException {

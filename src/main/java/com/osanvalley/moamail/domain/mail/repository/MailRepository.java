@@ -19,4 +19,6 @@ public interface MailRepository extends JpaRepository<Mail, Long> {
     Page<Mail> findAllBySocialMember_MemberAndFromEmailIn(Member member, List<String> fromEmails, Pageable pageable);
 
     boolean existsBySocialMember_MemberAndSocial(Member member, Social social);
+
+    List<Mail> findAllByFromEmailAndToEmailReceiversContaining(String fromEmail, String toEmail);
 }
