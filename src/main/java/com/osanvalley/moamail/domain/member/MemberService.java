@@ -121,13 +121,8 @@ public class MemberService {
 
             return new ResponseEntity<>(CommonApiResponse.of(MemberResponseDto.of(member, hasGoogle, hasNaver, accessToken)), httpHeaders, HttpStatus.OK);
         } else {
-            Social social = validateSocialType(socialAuthCodeDto.getProvider());
-
             Member member = MemberRequestDto.memberToEntity(registerType, socialMemberRequestDto);
             memberRepository.saveAndFlush(member);
-
-            SocialMember newSocialMember = SocialMemberRequestDto.socialMemberToEntity(social, member, socialMemberRequestDto);
-            socialMemberRepository.saveAndFlush(newSocialMember);
 
             String accessToken = tokenProvider.generateAccessToken(member.getAuthId());
             HttpHeaders httpHeaders = makeHttpHeaders(accessToken);
