@@ -21,8 +21,8 @@ public class MailBatchRepository {
     @Transactional
     public void saveAll(List<Mail> mails) {
         String sql = "insert into mail " +
-            "(created_at, updated_at, content, html, from_email, to_email_receivers, cc_email_receivers, history_id, send_date, social, social_member_id, title, has_read, alias) " +
-        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            "(created_at, updated_at, content, html, from_email, to_email_receivers, cc_email_receivers, history_id, send_date, social, social_member_id, title, has_read, alias, mail_unique_id, mime_type) " +
+        "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)";
 
         jdbcTemplate.batchUpdate(sql, 
                 mails,
@@ -42,6 +42,8 @@ public class MailBatchRepository {
                     ps.setString(12, mail.getTitle());
                     ps.setString(13, mail.getHasRead().name());
                     ps.setString(14, mail.getAlias());
+                    ps.setString(15, mail.getMailUniqueId());
+                    ps.setString(16, mail.getMimeType());
                 });
     }
 }

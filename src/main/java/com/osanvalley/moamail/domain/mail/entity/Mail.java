@@ -30,6 +30,8 @@ public class Mail extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String mailUniqueId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private SocialMember socialMember;
 
@@ -59,15 +61,18 @@ public class Mail extends BaseTimeEntity {
 
     private String historyId;
 
+    private String mimeType;
+
     private LocalDateTime sendDate;
 
     @Column(columnDefinition = "TINYINT(1)")
     private Boolean isSpam;
 
     @Builder
-    public Mail(Long id, SocialMember socialMember, Social social, String title, String alias, String fromEmail,
-            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, LocalDateTime sendDate, boolean isSpam) {
+    public Mail(Long id, String mailUniqueId, SocialMember socialMember, Social social, String title, String alias, String fromEmail,
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, String mimeType, LocalDateTime sendDate, boolean isSpam) {
         this.id = id;
+        this.mailUniqueId = mailUniqueId;
         this.socialMember = socialMember;
         this.social = social;
         this.title = title;
@@ -79,6 +84,7 @@ public class Mail extends BaseTimeEntity {
         this.html = html;
         this.hasRead = hasRead;
         this.historyId = historyId;
+        this.mimeType = mimeType;
         this.sendDate = sendDate;
         this.isSpam = isSpam;
     }
