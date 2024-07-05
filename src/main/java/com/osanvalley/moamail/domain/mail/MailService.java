@@ -3,6 +3,7 @@ package com.osanvalley.moamail.domain.mail;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
 import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
+import com.osanvalley.moamail.domain.mail.google.dto.MailPrevAndNextDto;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
@@ -20,6 +21,8 @@ import com.osanvalley.moamail.global.config.security.encrypt.TwoWayEncryptServic
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
+import com.osanvalley.moamail.global.oauth.dto.GmailAttachmentRequestDto;
+import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
 import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +35,12 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.UIDFolder;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -68,17 +75,22 @@ public class MailService {
             socialMemberRepository.saveAndFlush(socialMember);
         }
 
-        // 구글 어세스토큰 유효성검사
-        if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {
-            googleUtils.reissueGoogleAccessToken(member);
-        }
+        validateGoogleAccessToken(member, socialMember);
 
+        // 저장
         String nextPageToken = googleUtils.saveGmails(socialMember, null);
 
         // 스팸처리할 메일id들 -> sqs
         applicationEventPublisher.publishEvent(new MailEvent(member, socialMember, nextPageToken));
 
         return "메일 저장 완료";
+    }
+
+    // 구글 어세스토큰 유효성검사
+    private void validateGoogleAccessToken(Member member, SocialMember socialMember) {
+        if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {
+            googleUtils.reissueGoogleAccessToken(member);
+        }
     }
 
     // 소셜로그인 회원정보 세팅
@@ -170,10 +182,70 @@ public class MailService {
     @Transactional(readOnly = true)
     public MailDetailResponseDto showMail(Member member, Long mailId) {
         Mail mail = mailRepository.findBySocialMember_MemberAndId(member, mailId);
+        MailPrevAndNextDto prevMail = mailRepository.findMailWithPrev(mailId, mail.getSocialMember().getId());
+        MailPrevAndNextDto nextMail = mailRepository.findMailWithNext(mailId, mail.getSocialMember().getId());
 
-        return MailDetailResponseDto.of(mail);
+        List<MailDetailResponseDto.Attachment> attachments = new ArrayList<>();
+        setAttachmentsInfo(member, mail, attachments);
+
+        return MailDetailResponseDto.of(mail, attachments, prevMail, nextMail);
     }
 
+    // 첨부파일 적용(Gmail)
+    private void setAttachmentsInfo(Member member, Mail mail, List<MailDetailResponseDto.Attachment> attachments) {
+        if (mail.getSocial() == Social.GOOGLE) {
+            validateGoogleAccessToken(member, mail.getSocialMember());
+
+            GmailResponseDto gmail = googleUtils.getGmailMessage(mail.getSocialMember().getGoogleAccessToken(), mail.getMailUniqueId());
+
+            extractAttachmentsInfoFromGmailAPI(attachments, gmail);
+        }
+    }
+
+    private void extractAttachmentsInfoFromGmailAPI(List<MailDetailResponseDto.Attachment> attachments, GmailResponseDto gmail) {
+        if (gmail.getPayload().getMimeType().equals("multipart/mixed")) {
+            for (GmailResponseDto.MessagePart part : gmail.getPayload().getParts()) {
+                if (part.getFilename() != null && !part.getFilename().isEmpty() && part.getBody().getAttachmentId() != null) {
+                    String filename = part.getFilename();
+                    String attachmentId = part.getBody().getAttachmentId();
+
+                    MailDetailResponseDto.Attachment attachment = MailDetailResponseDto.Attachment.builder()
+                            .attachmentId(attachmentId)
+                            .filename(filename)
+                            .mimeType(part.getMimeType())
+                            .size(part.getBody().getSize())
+                            .build();
+                    attachments.add(attachment);
+                }
+            }
+        }
+    }
+
+    // 첨부파일 다운로드
+    @Transactional
+    public String downloadGmailAttachment(Member member, Long mailId, GmailAttachmentRequestDto gmailAttachmentRequestDto) {
+        Mail mail = mailRepository.findBySocialMember_MemberAndId(member, mailId);
+        SocialMember socialMember = mail.getSocialMember();
+
+        validateGoogleAccessToken(member, socialMember);
+
+        String attachmentData = googleUtils.getAttachmentData(mail.getMailUniqueId(), gmailAttachmentRequestDto.getAttachmentId(), socialMember.getGoogleAccessToken()).getData();
+        byte[] fileData = Base64.getUrlDecoder().decode(attachmentData);
+
+        String downloadDirPath = "C:\\Download";
+        File downloadDir = new File(downloadDirPath);
+
+        File file = new File(downloadDir, gmailAttachmentRequestDto.getFileName());
+
+        // 파일 저장
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(fileData);
+        } catch (IOException e) {
+            throw new BadRequestException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        return "첨부파일 다운로드 성공...!";
+    }
 
 
     // 스팸메일함 보기

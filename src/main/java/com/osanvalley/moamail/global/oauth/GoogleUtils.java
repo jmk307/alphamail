@@ -13,8 +13,7 @@ import java.util.stream.Collectors;
 
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
-import com.osanvalley.moamail.global.oauth.dto.GoogleAccessTokenDto;
-import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
+import com.osanvalley.moamail.global.oauth.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,9 +33,7 @@ import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
-import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message;
-import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
 import com.osanvalley.moamail.global.util.Date;
 
@@ -472,6 +469,21 @@ public class GoogleUtils {
             } else {
                 throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
             }
+        }
+    }
+
+    public GmailAttachmentResponseDto getAttachmentData(String messageId, String attachmentId, String googleAccessToken) {
+        try {
+            return webClient.get()
+                    .uri("https://gmail.googleapis.com/gmail/v1/users/me/messages/{messageId}/attachments/{id}", messageId, attachmentId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + googleAccessToken)
+                    .retrieve()
+                    .onStatus(HttpStatus::is4xxClientError, response -> response.bodyToMono(String.class).map(Exception::new))
+                    .bodyToMono(GmailAttachmentResponseDto.class)
+                    .block();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
         }
     }
 }
