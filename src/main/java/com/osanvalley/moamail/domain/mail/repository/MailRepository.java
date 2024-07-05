@@ -21,4 +21,6 @@ public interface MailRepository extends JpaRepository<Mail, Long> {
     boolean existsBySocialMember_MemberAndSocial(Member member, Social social);
 
     List<Mail> findAllByFromEmailAndToEmailReceiversContaining(String fromEmail, String toEmail);
+
+    Mail findBySocialMember_MemberAndId(Member member, Long id);
 }

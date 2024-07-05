@@ -1,5 +1,6 @@
 package com.osanvalley.moamail.domain.mail;
 
+import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import org.springframework.http.ResponseEntity;
@@ -69,5 +70,13 @@ public class MailApiController {
             @ApiIgnore @LoginUser Member member,
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showMailsSentByMe(member, pageNumber)));
+    }
+
+    @GetMapping("{mailId}")
+    @ApiOperation(value = "메일 상세 보기")
+    public ResponseEntity<CommonApiResponse<MailDetailResponseDto>> showMail(
+            @ApiIgnore @LoginUser Member member,
+            @PathVariable Long mailId) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.showMail(member, mailId)));
     }
 }
