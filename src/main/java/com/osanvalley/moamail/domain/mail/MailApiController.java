@@ -3,6 +3,7 @@ package com.osanvalley.moamail.domain.mail;
 import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
+import com.osanvalley.moamail.global.oauth.dto.GmailAttachmentRequestDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,5 +79,14 @@ public class MailApiController {
             @ApiIgnore @LoginUser Member member,
             @PathVariable Long mailId) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showMail(member, mailId)));
+    }
+
+    @PostMapping("{mailId}/attachment")
+    @ApiOperation(value = "첨부파일 다운로드")
+    public ResponseEntity<CommonApiResponse<String>> downloadAttachment(
+            @ApiIgnore @LoginUser Member member,
+            @PathVariable Long mailId,
+            @RequestBody GmailAttachmentRequestDto gmailAttachmentRequestDto) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.downloadGmailAttachment(member, mailId, gmailAttachmentRequestDto)));
     }
 }
