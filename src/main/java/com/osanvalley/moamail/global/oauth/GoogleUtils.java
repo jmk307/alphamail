@@ -231,6 +231,7 @@ public class GoogleUtils {
         for (GmailResponseDto gmail : gmails) {
             MessagePart payload = gmail.getPayload();
 
+            String mailUniqueId = gmail.getId();
             String title = filterPayLoadByKeyWord(payload, "Subject");
 
             String rawFromEmail = filterPayLoadByKeyWord(payload, "From");
@@ -260,10 +261,12 @@ public class GoogleUtils {
             Readable hasRead = filterHasRead(gmail.getLabelIds());
 
             String historyId = gmail.getHistoryId();
+            String mimeType = gmail.getPayload().getMimeType();
             LocalDateTime sendDate = Date.parseToLocalDateTime(filterSendDate(payload));
 
             Mail mail = Mail.builder()
                 .socialMember(socialMember)
+                .mailUniqueId(mailUniqueId)
                 .social(Social.GOOGLE)
                 .title(title)
                 .alias(alias)
@@ -274,6 +277,7 @@ public class GoogleUtils {
                 .html(html)
                 .hasRead(hasRead)
                 .historyId(historyId)
+                .mimeType(mimeType)
                 .sendDate(sendDate)
                 .build();
             mails.add(mail);

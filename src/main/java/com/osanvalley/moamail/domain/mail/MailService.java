@@ -1,6 +1,7 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
 import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
@@ -164,6 +165,15 @@ public class MailService {
 
         return PageDto.of(mails);
     }
+
+    // 메일 상세보기
+    @Transactional(readOnly = true)
+    public MailDetailResponseDto showMail(Member member, Long mailId) {
+        Mail mail = mailRepository.findBySocialMember_MemberAndId(member, mailId);
+
+        return MailDetailResponseDto.of(mail);
+    }
+
 
 
     // 스팸메일함 보기
