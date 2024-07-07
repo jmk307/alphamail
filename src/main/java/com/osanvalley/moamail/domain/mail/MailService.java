@@ -36,13 +36,11 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.UIDFolder;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.osanvalley.moamail.domain.member.MemberService.validateRegisterType;
@@ -123,9 +121,9 @@ public class MailService {
         return socialMemberRequestDto;
     }
 
+    // 전체메일 보기 -> 지민(완)
     @Transactional(readOnly = true)
     public PageDto showAllMails(Member member, int pageNumber) {
-        // 전체메일 보기 -> 지민(완)
         Pageable pageable = PageRequest.of(pageNumber - 1, 50, Sort.by(Sort.Direction.DESC, "sendDate"));
         Page<Mail> mails = mailRepository.findAllBySocialMember_Member(member, pageable);
 
@@ -230,6 +228,13 @@ public class MailService {
         validateGoogleAccessToken(member, socialMember);
 
         String attachmentData = googleUtils.getAttachmentData(mail.getMailUniqueId(), gmailAttachmentRequestDto.getAttachmentId(), socialMember.getGoogleAccessToken()).getData();
+        encodedDataToFile(gmailAttachmentRequestDto, attachmentData);
+
+        return "첨부파일 다운로드 성공...!";
+    }
+
+    // 인코딩 파일 디코딩하기
+    private void encodedDataToFile(GmailAttachmentRequestDto gmailAttachmentRequestDto, String attachmentData) {
         byte[] fileData = Base64.getUrlDecoder().decode(attachmentData);
 
         String downloadDirPath = "C:\\Download";
@@ -243,8 +248,6 @@ public class MailService {
         } catch (IOException e) {
             throw new BadRequestException(ErrorCode.FILE_NOT_FOUND);
         }
-
-        return "첨부파일 다운로드 성공...!";
     }
 
 
@@ -252,6 +255,7 @@ public class MailService {
 
 
     // 메일 발신하기(Gmail) -> 지민
+
 
 
     // 네이버 메서드 //
