@@ -253,7 +253,7 @@ public class GoogleUtils {
             String filterToEmails = filterCcAndToEmails(rawToEmails);
             String filterCCEmails = filterCcAndToEmails(rawCcEmails);
 
-            String content = decodingBase64Url(filterContentAndHtml(payload, "text/plain"));
+            String content = convertNullToEmptyString(decodingBase64Url(filterContentAndHtml(payload, "text/plain")));
             String html = decodingBase64Url(filterContentAndHtml(payload, "text/html"));
             Readable hasRead = filterHasRead(gmail.getLabelIds());
 
@@ -283,7 +283,11 @@ public class GoogleUtils {
         mailBatchRepository.saveAll(mails);
     }
 
-
+    public String convertNullToEmptyString(String content) {
+        return content == null
+                ? ""
+                : content;
+    }
 
     public Readable filterHasRead(List<String> labelIds) {
         return labelIds.contains("UNREAD")
@@ -486,4 +490,6 @@ public class GoogleUtils {
             throw new BadRequestException(ErrorCode.GOOGLE_BAD_REQUEST);
         }
     }
+    
+    // Gmail 발신하기
 }

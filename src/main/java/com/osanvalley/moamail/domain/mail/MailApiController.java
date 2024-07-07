@@ -43,7 +43,7 @@ public class MailApiController {
 
     @GetMapping
     @ApiOperation(value = "메일 전체 읽기")
-    public ResponseEntity<CommonApiResponse<PageDto>> showAllmails(
+    public ResponseEntity<CommonApiResponse<PageDto>> showAllMails(
             @ApiIgnore @LoginUser Member member,
             @RequestParam int pageNumber) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showAllMails(member, pageNumber)));
