@@ -80,13 +80,4 @@ public class MailApiController {
             @PathVariable Long mailId) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showMail(member, mailId)));
     }
-
-    @PostMapping("{mailId}/attachment")
-    @ApiOperation(value = "첨부파일 다운로드")
-    public ResponseEntity<CommonApiResponse<String>> downloadAttachment(
-            @ApiIgnore @LoginUser Member member,
-            @PathVariable Long mailId,
-            @RequestBody GmailAttachmentRequestDto gmailAttachmentRequestDto) {
-        return ResponseEntity.ok(CommonApiResponse.of(mailService.downloadGmailAttachment(member, mailId, gmailAttachmentRequestDto)));
-    }
 }
