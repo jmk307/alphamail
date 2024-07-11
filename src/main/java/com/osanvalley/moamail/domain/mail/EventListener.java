@@ -9,6 +9,8 @@ import com.osanvalley.moamail.global.config.sqs.SQSSenderImpl;
 import com.osanvalley.moamail.global.oauth.GoogleUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -19,17 +21,22 @@ public class EventListener {
     private final MailRepository mailRepository;
     private final GoogleUtils googleUtils;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleAfterCommitMailsSaved(MailEvent mailEvent) throws JsonProcessingException {
-        int[] mailIds = mailRepository.findAllBySocialMember_Member(mailEvent.getMember()).stream()
-                .map(Mail::getId)
-                .mapToInt(Long::intValue).toArray();
+        int[] mailIds = getMailIds(mailEvent);
 
         sendMailIdsToSQSEachly(mailIds);
 
         if (mailEvent.getNextPageToken() != null) {
             googleUtils.saveRemainingGmails(mailEvent.getSocialMember(), mailEvent.getNextPageToken());
         }
+    }
+
+    private int[] getMailIds(MailEvent mailEvent) {
+        return mailRepository.findAllBySocialMember_Member(mailEvent.getMember()).stream()
+                .map(Mail::getId)
+                .mapToInt(Long::intValue).toArray();
     }
 
     private void sendMailIdsToSQSEachly(int[] mailIds) throws JsonProcessingException {

@@ -1,13 +1,17 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.entity.MailAttachment;
 import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
 import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
 import com.osanvalley.moamail.domain.mail.google.dto.MailPrevAndNextDto;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
+import com.osanvalley.moamail.domain.mail.repository.MailAttachmentRepository;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
 import com.osanvalley.moamail.domain.member.model.RegisterType;
+import com.osanvalley.moamail.global.config.s3.AwsS3ServiceImpl;
+import com.osanvalley.moamail.global.error.exception.InternalServerException;
 import com.osanvalley.moamail.global.imap.NaverUtils;
 import com.osanvalley.moamail.global.imap.NaverImapMailConnector;
 import com.osanvalley.moamail.domain.mail.repository.MailBatchRepository;
@@ -28,8 +32,10 @@ import com.osanvalley.moamail.global.oauth.dto.GoogleMemberInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.*;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -56,6 +62,8 @@ public class MailService {
     private final SocialMemberRepository socialMemberRepository;
     private final TwoWayEncryptService twoWayEncryptService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final MailAttachmentRepository mailAttachmentRepository;
+    private final AwsS3ServiceImpl awsS3Service;
 
     // 소셜 계정 연동 및 메일 저장(Gmail) -> 지민
     @Transactional
@@ -177,77 +185,59 @@ public class MailService {
     }
 
     // 메일 상세보기
-    @Transactional(readOnly = true)
+    @Transactional
     public MailDetailResponseDto showMail(Member member, Long mailId) {
         Mail mail = mailRepository.findBySocialMember_MemberAndId(member, mailId);
         MailPrevAndNextDto prevMail = mailRepository.findMailWithPrev(mailId, mail.getSocialMember().getId());
         MailPrevAndNextDto nextMail = mailRepository.findMailWithNext(mailId, mail.getSocialMember().getId());
 
-        List<MailDetailResponseDto.Attachment> attachments = new ArrayList<>();
-        setAttachmentsInfo(member, mail, attachments);
+        if (mail.getMimeType().equals("multipart/mixed") && mail.getMailAttachments().isEmpty()) {
+            setAttachmentsInfo(member, mail);
+        }
 
-        return MailDetailResponseDto.of(mail, attachments, prevMail, nextMail);
+        return MailDetailResponseDto.of(mail, prevMail, nextMail);
     }
 
     // 첨부파일 적용(Gmail)
-    private void setAttachmentsInfo(Member member, Mail mail, List<MailDetailResponseDto.Attachment> attachments) {
+    private void setAttachmentsInfo(Member member, Mail mail) {
         if (mail.getSocial() == Social.GOOGLE) {
             validateGoogleAccessToken(member, mail.getSocialMember());
 
             GmailResponseDto gmail = googleUtils.getGmailMessage(mail.getSocialMember().getGoogleAccessToken(), mail.getMailUniqueId());
 
-            extractAttachmentsInfoFromGmailAPI(attachments, gmail);
+            extractAttachmentsInfoFromGmailAPI(mail, gmail);
         }
     }
 
-    private void extractAttachmentsInfoFromGmailAPI(List<MailDetailResponseDto.Attachment> attachments, GmailResponseDto gmail) {
-        if (gmail.getPayload().getMimeType().equals("multipart/mixed")) {
-            for (GmailResponseDto.MessagePart part : gmail.getPayload().getParts()) {
-                if (part.getFilename() != null && !part.getFilename().isEmpty() && part.getBody().getAttachmentId() != null) {
-                    String filename = part.getFilename();
-                    String attachmentId = part.getBody().getAttachmentId();
+    private void extractAttachmentsInfoFromGmailAPI(Mail mail, GmailResponseDto gmail) {
+        for (GmailResponseDto.MessagePart part : gmail.getPayload().getParts()) {
+            if (part.getFilename() != null && !part.getFilename().isEmpty() && part.getBody().getAttachmentId() != null) {
+                String filename = part.getFilename();
+                String mimeType = part.getMimeType();
+                String encodedAttachmentData = googleUtils.getAttachmentData(mail.getMailUniqueId(), part.getBody().getAttachmentId(), mail.getSocialMember().getGoogleAccessToken()).getData();
+                MultipartFile attachment = encodedDataToMultipartFile(filename, mimeType, encodedAttachmentData);
 
-                    MailDetailResponseDto.Attachment attachment = MailDetailResponseDto.Attachment.builder()
-                            .attachmentId(attachmentId)
-                            .filename(filename)
-                            .mimeType(part.getMimeType())
-                            .size(part.getBody().getSize())
-                            .build();
-                    attachments.add(attachment);
-                }
+                String attachmentUrl = awsS3Service.uploadImage(attachment, "mail");
+
+                MailAttachment mailAttachment = MailAttachment.builder()
+                        .fileName(filename)
+                        .mimeType(part.getMimeType())
+                        .size(part.getBody().getSize())
+                        .attachmentDownloadUrl(attachmentUrl)
+                        .mail(mail)
+                        .build();
+                mailAttachmentRepository.saveAndFlush(mailAttachment);
+
+                mail.getMailAttachments().add(mailAttachment);
             }
         }
     }
 
-    // 첨부파일 다운로드
-    @Transactional
-    public String downloadGmailAttachment(Member member, Long mailId, GmailAttachmentRequestDto gmailAttachmentRequestDto) {
-        Mail mail = mailRepository.findBySocialMember_MemberAndId(member, mailId);
-        SocialMember socialMember = mail.getSocialMember();
-
-        validateGoogleAccessToken(member, socialMember);
-
-        String attachmentData = googleUtils.getAttachmentData(mail.getMailUniqueId(), gmailAttachmentRequestDto.getAttachmentId(), socialMember.getGoogleAccessToken()).getData();
-        encodedDataToFile(gmailAttachmentRequestDto, attachmentData);
-
-        return "첨부파일 다운로드 성공...!";
-    }
-
     // 인코딩 파일 디코딩하기
-    private void encodedDataToFile(GmailAttachmentRequestDto gmailAttachmentRequestDto, String attachmentData) {
+    private MultipartFile encodedDataToMultipartFile(String fileName, String mimeType, String attachmentData) {
         byte[] fileData = Base64.getUrlDecoder().decode(attachmentData);
 
-        String downloadDirPath = "C:\\Download";
-        File downloadDir = new File(downloadDirPath);
-
-        File file = new File(downloadDir, gmailAttachmentRequestDto.getFileName());
-
-        // 파일 저장
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.write(fileData);
-        } catch (IOException e) {
-            throw new BadRequestException(ErrorCode.FILE_NOT_FOUND);
-        }
+        return new MockMultipartFile(fileName, fileName, mimeType, fileData);
     }
 
 
