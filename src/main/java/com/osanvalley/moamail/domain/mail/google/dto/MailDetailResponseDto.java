@@ -2,11 +2,13 @@ package com.osanvalley.moamail.domain.mail.google.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.osanvalley.moamail.domain.mail.entity.Mail;
+import com.osanvalley.moamail.domain.mail.entity.MailAttachment;
 import com.osanvalley.moamail.domain.member.model.Social;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -39,20 +41,20 @@ public class MailDetailResponseDto {
     @Setter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class Attachment {
-        private String attachmentId;
-
         private String filename;
 
         private String mimeType;
 
         private Integer size;
 
+        private String attachmentDownloadUrl;
+
         @Builder
-        public Attachment(String attachmentId, String filename, String mimeType, Integer size) {
-            this.attachmentId = attachmentId;
+        public Attachment(String filename, String mimeType, Integer size, String attachmentDownloadUrl) {
             this.filename = filename;
             this.mimeType = mimeType;
             this.size = size;
+            this.attachmentDownloadUrl = attachmentDownloadUrl;
         }
     }
 
@@ -73,7 +75,7 @@ public class MailDetailResponseDto {
         this.nextMail = nextMail;
     }
 
-    public static MailDetailResponseDto of(Mail mail, List<Attachment> attachments, MailPrevAndNextDto prevMail, MailPrevAndNextDto nextMail) {
+    public static MailDetailResponseDto of(Mail mail, MailPrevAndNextDto prevMail, MailPrevAndNextDto nextMail) {
         return MailDetailResponseDto.builder()
             .mailId(mail.getId())
             .social(mail.getSocial())
@@ -83,7 +85,13 @@ public class MailDetailResponseDto {
             .ccEmailReceivers(mail.getCcEmailReceivers())
             .html(mail.getHtml())
             .sendDate(mail.getSendDate())
-            .attachments(attachments)
+            .attachments(mail.getMailAttachments().stream()
+                .map(attachment -> Attachment.builder()
+                    .filename(attachment.getFileName())
+                    .mimeType(attachment.getMimeType())
+                    .size(attachment.getSize())
+                    .attachmentDownloadUrl(attachment.getAttachmentDownloadUrl())
+                    .build()).collect(Collectors.toList()))
             .prevMail(prevMail)
             .nextMail(nextMail)
             .build();

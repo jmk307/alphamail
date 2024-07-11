@@ -1,16 +1,10 @@
 package com.osanvalley.moamail.domain.mail.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.SocialMember;
@@ -68,9 +62,13 @@ public class Mail extends BaseTimeEntity {
     @Column(columnDefinition = "TINYINT(1)")
     private Boolean isSpam;
 
+    @OneToMany(mappedBy = "mail", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<MailAttachment> mailAttachments = new ArrayList<>();
+
     @Builder
     public Mail(Long id, String mailUniqueId, SocialMember socialMember, Social social, String title, String alias, String fromEmail,
-            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId, String mimeType, LocalDateTime sendDate, boolean isSpam) {
+            String toEmailReceivers, String ccEmailReceivers, String content, String html, Readable hasRead, String historyId,
+                String mimeType, LocalDateTime sendDate, boolean isSpam, List<MailAttachment> mailAttachments) {
         this.id = id;
         this.mailUniqueId = mailUniqueId;
         this.socialMember = socialMember;
@@ -87,5 +85,6 @@ public class Mail extends BaseTimeEntity {
         this.mimeType = mimeType;
         this.sendDate = sendDate;
         this.isSpam = isSpam;
+        this.mailAttachments = mailAttachments;
     }
 }
