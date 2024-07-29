@@ -24,6 +24,7 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://maven.google.com' }
 }
 
 dependencies {
@@ -107,6 +108,14 @@ dependencies {
 
 	// File to MultipartFile
 	implementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// gmail api
+	implementation 'com.google.api-client:google-api-client:1.32.1'
+	implementation 'com.google.oauth-client:google-oauth-client-jetty:1.32.1'
+	implementation group: 'com.google.apis', name: 'google-api-services-gmail', version: 'v1-rev110-1.25.0'
+	implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: '1.23.0'
+
+
 }
 
 test {

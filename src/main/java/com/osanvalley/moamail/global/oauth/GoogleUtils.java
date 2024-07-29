@@ -1,8 +1,7 @@
 package com.osanvalley.moamail.global.oauth;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -11,9 +10,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.GmailScopes;
+import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.api.services.gmail.model.Message;
+
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.io.ByteArrayOutputStream;
+import java.util.Properties;
+
+import com.osanvalley.moamail.domain.mail.google.dto.MailSendRequestDto;
 import com.osanvalley.moamail.domain.mail.model.Readable;
 import com.osanvalley.moamail.domain.member.entity.Member;
 import com.osanvalley.moamail.global.oauth.dto.*;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +52,6 @@ import com.osanvalley.moamail.domain.member.model.Social;
 import com.osanvalley.moamail.domain.member.repository.SocialMemberRepository;
 import com.osanvalley.moamail.global.error.ErrorCode;
 import com.osanvalley.moamail.global.error.exception.BadRequestException;
-import com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message;
 import com.osanvalley.moamail.global.oauth.dto.GmailResponseDto.MessagePart;
 import com.osanvalley.moamail.global.util.Date;
 
@@ -60,6 +78,52 @@ public class GoogleUtils {
 
     @Value("${google.redirectUri}")
     private String REDIRECT_URI;
+
+    private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
+    private static final JsonFactory JSON_FACTORY = new GsonFactory();
+
+    public GoogleCredentials getCredentials(String googleAccessToken) {
+        AccessToken accessToken = new AccessToken(googleAccessToken, null);
+        return GoogleCredentials.create(accessToken)
+                .createScoped(GmailScopes.GMAIL_SEND);
+    }
+
+    public Gmail getGmailService(String googleAccessToken) {
+        GoogleCredentials credentials = getCredentials(googleAccessToken);
+        HttpCredentialsAdapter credentialsAdapter = new HttpCredentialsAdapter(credentials);
+        return new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentialsAdapter)
+                .setApplicationName("alphamail")
+                .build();
+    }
+
+    @Async("mail")
+    public void sendGmail(String googleAccessToken, MailSendRequestDto mailSendRequestDto) throws IOException, MessagingException {
+        Gmail service = getGmailService(googleAccessToken);
+        MimeMessage email = createEmail(mailSendRequestDto.getToEmail(), mailSendRequestDto.getFromEmail(), mailSendRequestDto.getSubject(), mailSendRequestDto.getBodyText());
+        sendMessage(service, email);
+    }
+
+    public MimeMessage createEmail(String to, String from, String subject, String bodyText) throws MessagingException {
+        Properties props = new Properties();
+        Session session = Session.getDefaultInstance(props, null);
+
+        MimeMessage email = new MimeMessage(session);
+        email.setFrom(new InternetAddress(from));
+        email.addRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(to));
+        email.setSubject(subject);
+        email.setText(bodyText);
+        return email;
+    }
+
+    public void sendMessage(Gmail service, MimeMessage email) throws MessagingException, IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        email.writeTo(buffer);
+        byte[] rawMessageBytes = buffer.toByteArray();
+        String encodedEmail = Base64.getUrlEncoder().encodeToString(rawMessageBytes);
+        Message message = new Message();
+        message.setRaw(encodedEmail);
+        service.users().messages().send("me", message).execute();
+    }
 
     // 구글 정보 가져오기
     @Transactional(readOnly = true)
@@ -109,8 +173,6 @@ public class GoogleUtils {
 
     @Transactional(readOnly = true)
     public GmailListResponseDto showGmailMessages(String accessToken, String nextPageToken) {
-        GmailListResponseDto gmailListResponseDto = getGmailMessages(accessToken, nextPageToken);
-
         return getGmailMessages(accessToken, nextPageToken);
     }
 
@@ -125,7 +187,7 @@ public class GoogleUtils {
             }
 
             List<String> messageIds = gmailList.messages.stream()
-                .map(Message::getId)
+                .map(com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message::getId)
                 .collect(Collectors.toList());
             count += messageIds.size();
 
@@ -174,7 +236,7 @@ public class GoogleUtils {
             }
 
             List<String> messageIds = gmailList.messages.stream()
-                    .map(Message::getId)
+                    .map(com.osanvalley.moamail.global.oauth.dto.GmailListResponseDto.Message::getId)
                     .collect(Collectors.toList());
             count += messageIds.size();
 
