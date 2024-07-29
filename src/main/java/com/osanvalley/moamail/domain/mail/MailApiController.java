@@ -1,6 +1,7 @@
 package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
+import com.osanvalley.moamail.domain.mail.google.dto.MailSendRequestDto;
 import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import com.osanvalley.moamail.global.oauth.dto.GmailAttachmentRequestDto;
@@ -18,6 +19,7 @@ import springfox.documentation.annotations.ApiIgnore;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class MailApiController {
 
     @PostMapping("google")
     @ApiOperation(value = "구글 계정 연동 및 Gmail 메일 저장하기")
-    public ResponseEntity<CommonApiResponse<String>> linkGoogleAndsaveGmails(
+    public ResponseEntity<CommonApiResponse<String>> linkGoogleAndSaveGmails(
             @ApiIgnore @LoginUser Member member,
             @RequestBody SocialAuthCodeDto socialAuthCodeDto) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.linkGoogleAndSaveGmails(member, socialAuthCodeDto)));
@@ -79,5 +81,20 @@ public class MailApiController {
             @ApiIgnore @LoginUser Member member,
             @PathVariable Long mailId) {
         return ResponseEntity.ok(CommonApiResponse.of(mailService.showMail(member, mailId)));
+    }
+
+    @GetMapping("current")
+    @ApiOperation(value = "유저 추가한 메일 리스트 보기")
+    public ResponseEntity<CommonApiResponse<List<String>>> showMemberSocialEmails(
+            @ApiIgnore @LoginUser Member member) {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.showMemberSocialEmails(member)));
+    }
+
+    @PostMapping("google/send")
+    @ApiOperation(value = "Gmail 보내기")
+    public ResponseEntity<CommonApiResponse<String>> sendGmail(
+            @ApiIgnore @LoginUser Member member,
+            @RequestBody MailSendRequestDto mailSendRequestDto) throws MessagingException, IOException {
+        return ResponseEntity.ok(CommonApiResponse.of(mailService.sendGmail(member, mailSendRequestDto)));
     }
 }

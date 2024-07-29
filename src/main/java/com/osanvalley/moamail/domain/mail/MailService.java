@@ -2,10 +2,7 @@ package com.osanvalley.moamail.domain.mail;
 
 import com.osanvalley.moamail.domain.mail.entity.Mail;
 import com.osanvalley.moamail.domain.mail.entity.MailAttachment;
-import com.osanvalley.moamail.domain.mail.google.dto.MailDetailResponseDto;
-import com.osanvalley.moamail.domain.mail.google.dto.MailEvent;
-import com.osanvalley.moamail.domain.mail.google.dto.MailPrevAndNextDto;
-import com.osanvalley.moamail.domain.mail.google.dto.PageDto;
+import com.osanvalley.moamail.domain.mail.google.dto.*;
 import com.osanvalley.moamail.domain.mail.repository.MailAttachmentRepository;
 import com.osanvalley.moamail.domain.member.dto.SocialAuthCodeDto;
 import com.osanvalley.moamail.domain.member.dto.SocialMemberRequestDto;
@@ -47,6 +44,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.osanvalley.moamail.domain.member.MemberService.validateRegisterType;
@@ -243,10 +241,24 @@ public class MailService {
 
     // 스팸메일함 보기
 
+    @Transactional(readOnly = true)
+    public List<String> showMemberSocialEmails(Member member) {
+        return member.getSocialMembers().stream()
+                .map(SocialMember::getEmail)
+                .collect(Collectors.toList());
+    }
 
     // 메일 발신하기(Gmail) -> 지민
+    @Transactional
+    public String sendGmail(Member member, MailSendRequestDto mailSendRequestDto) throws MessagingException, IOException {
+        SocialMember socialMember = socialMemberRepository.findByMemberAndEmail(member, mailSendRequestDto.getFromEmail())
+                .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
+        validateGoogleAccessToken(member, socialMember);
 
+        googleUtils.sendGmail(socialMember.getGoogleAccessToken(), mailSendRequestDto);
 
+        return "Gmail 발신 성공...!";
+    }
 
     // 네이버 메서드 //
     // 메일 저장하기(네이버)
