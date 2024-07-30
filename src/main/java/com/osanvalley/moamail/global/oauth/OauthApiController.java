@@ -55,12 +55,12 @@ public class OauthApiController {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.deleteAllGmails()));
     }
 
-    @PatchMapping("google/reissue")
+    /*@PatchMapping("google/reissue")
     @ApiOperation(value = "Gmail 토큰 재발급")
     public ResponseEntity<CommonApiResponse<String>> reissueAccessToken(
             @ApiIgnore @LoginUser Member member) {
         return ResponseEntity.ok(CommonApiResponse.of(googleUtils.reissueGoogleAccessToken(member)));
-    }
+    }*/
 
     @GetMapping("google/token")
     @ApiOperation(value = "Gmail 토큰 가져오기")
