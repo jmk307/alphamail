@@ -79,7 +79,7 @@ public class MailService {
             socialMemberRepository.saveAndFlush(socialMember);
         }
 
-        validateGoogleAccessToken(member, socialMember);
+        validateGoogleAccessToken(socialMember);
 
         // 저장
         String nextPageToken = googleUtils.saveGmails(socialMember, null);
@@ -91,9 +91,9 @@ public class MailService {
     }
 
     // 구글 어세스토큰 유효성검사
-    private void validateGoogleAccessToken(Member member, SocialMember socialMember) {
+    private void validateGoogleAccessToken(SocialMember socialMember) {
         if (!googleUtils.isGoogleAccessTokenValid(socialMember.getGoogleAccessToken())) {
-            googleUtils.reissueGoogleAccessToken(member);
+            googleUtils.reissueGoogleAccessToken(socialMember);
         }
     }
 
@@ -190,16 +190,16 @@ public class MailService {
         MailPrevAndNextDto nextMail = mailRepository.findMailWithNext(mailId, mail.getSocialMember().getId());
 
         if (mail.getMimeType().equals("multipart/mixed") && mail.getMailAttachments().isEmpty()) {
-            setAttachmentsInfo(member, mail);
+            setAttachmentsInfo(mail);
         }
 
         return MailDetailResponseDto.of(mail, prevMail, nextMail);
     }
 
     // 첨부파일 적용(Gmail)
-    private void setAttachmentsInfo(Member member, Mail mail) {
+    private void setAttachmentsInfo(Mail mail) {
         if (mail.getSocial() == Social.GOOGLE) {
-            validateGoogleAccessToken(member, mail.getSocialMember());
+            validateGoogleAccessToken(mail.getSocialMember());
 
             GmailResponseDto gmail = googleUtils.getGmailMessage(mail.getSocialMember().getGoogleAccessToken(), mail.getMailUniqueId());
 
@@ -241,6 +241,8 @@ public class MailService {
 
     // 스팸메일함 보기
 
+
+    // 유저 추가한 메일 리스트 보기
     @Transactional(readOnly = true)
     public List<String> showMemberSocialEmails(Member member) {
         return member.getSocialMembers().stream()
@@ -251,9 +253,10 @@ public class MailService {
     // 메일 발신하기(Gmail) -> 지민
     @Transactional
     public String sendGmail(Member member, MailSendRequestDto mailSendRequestDto) throws MessagingException, IOException {
-        SocialMember socialMember = socialMemberRepository.findByMemberAndEmail(member, mailSendRequestDto.getFromEmail())
+        System.out.println(member.getId());
+        SocialMember socialMember = socialMemberRepository.findByMember_AuthIdAndEmail(member.getAuthId(), mailSendRequestDto.getFromEmail())
                 .orElseThrow(() -> new BadRequestException(ErrorCode.MEMBER_NOT_FOUND));
-        validateGoogleAccessToken(member, socialMember);
+        validateGoogleAccessToken(socialMember);
 
         googleUtils.sendGmail(socialMember.getGoogleAccessToken(), mailSendRequestDto);
 
